@@ -1,0 +1,24 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='470' viewBox='0 0 1080 470' font-family='ui-sans-serif,Segoe UI,Roboto,Helvetica,Arial,sans-serif'>
+<rect width='1080' height='100%' fill='#fff'/>
+<text x='30' y='36' font-size='21' font-weight='700' fill='#1f2328'>Sheet 4 — UI, ID &amp; selector sense</text>
+<text x='30' y='57' font-size='12' fill='#6a7076'>encoder + OLED + buzzer + HAT EEPROM + opto-isolated selector input</text>
+<rect x='60' y='110' width='460' height='110' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='78' y='140' font-size='13' font-weight='700' fill='#1f2328' text-anchor='start'>Rotary encoder</text>
+<text x='78' y='165' font-size='11' font-weight='600' fill='#1f6feb' text-anchor='start'>A=GPIO19 · B=GPIO26 · SW=GPIO20</text>
+<text x='78' y='188' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='start'>pull-ups + RC debounce</text>
+<rect x='560' y='110' width='460' height='110' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='578' y='140' font-size='13' font-weight='700' fill='#1f2328' text-anchor='start'>OLED header (I²C)</text>
+<text x='578' y='165' font-size='11' font-weight='600' fill='#1f6feb' text-anchor='start'>SDA1=GPIO2 · SCL1=GPIO3</text>
+<text x='578' y='188' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='start'>4-pin: 3V3/GND/SDA/SCL</text>
+<rect x='60' y='250' width='460' height='110' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='78' y='280' font-size='13' font-weight='700' fill='#1f2328' text-anchor='start'>Buzzer</text>
+<text x='78' y='305' font-size='11' font-weight='600' fill='#1f6feb' text-anchor='start'>GPIO21 → MMBT3904 + flyback</text>
+<text x='78' y='328' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='start'>piezo, CBPi buzzer plugin</text>
+<rect x='560' y='250' width='460' height='110' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='578' y='280' font-size='13' font-weight='700' fill='#1f2328' text-anchor='start'>HAT ID EEPROM</text>
+<text x='578' y='305' font-size='11' font-weight='600' fill='#1f6feb' text-anchor='start'>AT24C32 on ID_SD/ID_SC (GPIO0/1)</text>
+<text x='578' y='328' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='start'>3.9k pull-ups + WP jumper · auto-ID at boot</text>
+<rect x='60' y='390' width='960' height='58' rx='6' fill='#eefaf3' stroke='#0b8a5b' stroke-width='1.5'/>
+<text x='78' y='414' font-size='12.5' font-weight='700' fill='#1f2328' text-anchor='start'>Selector sense — opto-isolated input (PC817)</text>
+<text x='78' y='434' font-size='10.5' font-weight='600' fill='#6a7076' text-anchor='start'>GPIO16 ← opto ← screw terminal · DRY CONTACT ONLY from the element selector&#x27;s spare pole. Never tap 240V.</text>
+</svg>

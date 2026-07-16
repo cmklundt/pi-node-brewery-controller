@@ -1,0 +1,99 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='660' viewBox='0 0 1080 660' font-family='ui-sans-serif,Segoe UI,Roboto,Helvetica,Arial,sans-serif'>
+<rect width='1080' height='100%' fill='#fff'/>
+<text x='30' y='36' font-size='21' font-weight='700' fill='#1f2328'>Sheet 3 — Isolation barrier &amp; outputs</text>
+<text x='30' y='57' font-size='12' fill='#6a7076'>6 drive channels · ISO7741 → logic-FET → pluggable terminal · GND ≠ GND_ISO</text>
+<path d='M468,92 L468,620' fill='none' stroke='#0b8a5b' stroke-width='2.2' stroke-dasharray='7 6' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='460' y='104' font-size='11' font-weight='700' fill='#6a7076' text-anchor='end'>Pi / 3V3 domain</text>
+<text x='476' y='104' font-size='11' font-weight='700' fill='#0b8a5b' text-anchor='start'>GND_ISO drive domain</text>
+<rect x='60' y='138' width='53.599999999999994' height='19' rx='4' fill='#1f2328' opacity='0.13'/>
+<rect x='60' y='138' width='53.599999999999994' height='19' rx='4' fill='none' stroke='#1f2328' stroke-width='1.1'/>
+<text x='86.8' y='152' font-size='11' font-weight='700' fill='#1f2328' text-anchor='middle'>GPIO17</text>
+<path d='M148,146 L300,146' fill='none' stroke='#1f2328' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='300' y='126' width='150' height='304' rx='6' fill='#eefaf3' stroke='#0b8a5b' stroke-width='1.5'/>
+<text x='375' y='148' font-size='11.5' font-weight='700' fill='#1f2328' text-anchor='middle'>U20 ISO7741</text>
+<text x='375' y='164' font-size='9.5' font-weight='500' fill='#6a7076' text-anchor='middle'>quad digital isolator</text>
+<path d='M450,146 L560,146' fill='none' stroke='#0b8a5b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='560' y='126' width='180' height='44' rx='6' fill='#fdf6f2' stroke='#d1382c' stroke-width='1.5'/>
+<text x='650' y='145' font-size='10' font-weight='700' fill='#1f2328' text-anchor='middle'>2N7002 → SSR ctrl</text>
+<text x='650' y='161' font-size='9' font-weight='500' fill='#6a7076' text-anchor='middle'>+ LED status</text>
+<path d='M740,146 L830,146' fill='none' stroke='#d1382c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='830' y='126' width='215' height='44' rx='6' fill='#fff' stroke='#d1382c' stroke-width='1.5'/>
+<circle cx='848' cy='148' r='3.4' fill='#d1382c'/>
+<circle cx='864' cy='148' r='3.4' fill='#1f2328'/>
+<text x='878' y='143' font-size='10' font-weight='700' fill='#1f2328' text-anchor='start'>OUT1  SSR — HLT element</text>
+<text x='878' y='159' font-size='9' font-weight='500' fill='#6a7076' text-anchor='start'>240V · time-proportioned</text>
+<rect x='60' y='218' width='53.599999999999994' height='19' rx='4' fill='#1f2328' opacity='0.13'/>
+<rect x='60' y='218' width='53.599999999999994' height='19' rx='4' fill='none' stroke='#1f2328' stroke-width='1.1'/>
+<text x='86.8' y='232' font-size='11' font-weight='700' fill='#1f2328' text-anchor='middle'>GPIO27</text>
+<path d='M148,226 L300,226' fill='none' stroke='#1f2328' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M450,226 L560,226' fill='none' stroke='#0b8a5b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='560' y='206' width='180' height='44' rx='6' fill='#fdf6f2' stroke='#d1382c' stroke-width='1.5'/>
+<text x='650' y='225' font-size='10' font-weight='700' fill='#1f2328' text-anchor='middle'>2N7002 → SSR ctrl</text>
+<text x='650' y='241' font-size='9' font-weight='500' fill='#6a7076' text-anchor='middle'>+ LED status</text>
+<path d='M740,226 L830,226' fill='none' stroke='#d1382c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='830' y='206' width='215' height='44' rx='6' fill='#fff' stroke='#d1382c' stroke-width='1.5'/>
+<circle cx='848' cy='228' r='3.4' fill='#d1382c'/>
+<circle cx='864' cy='228' r='3.4' fill='#1f2328'/>
+<text x='878' y='223' font-size='10' font-weight='700' fill='#1f2328' text-anchor='start'>OUT2  SSR — Boil element</text>
+<text x='878' y='239' font-size='9' font-weight='500' fill='#6a7076' text-anchor='start'>240V · time-proportioned</text>
+<rect x='60' y='298' width='53.599999999999994' height='19' rx='4' fill='#1f2328' opacity='0.13'/>
+<rect x='60' y='298' width='53.599999999999994' height='19' rx='4' fill='none' stroke='#1f2328' stroke-width='1.1'/>
+<text x='86.8' y='312' font-size='11' font-weight='700' fill='#1f2328' text-anchor='middle'>GPIO22</text>
+<path d='M148,306 L300,306' fill='none' stroke='#1f2328' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M450,306 L560,306' fill='none' stroke='#0b8a5b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='560' y='286' width='180' height='44' rx='6' fill='#fdf6f2' stroke='#b3541e' stroke-width='1.5'/>
+<text x='650' y='305' font-size='10' font-weight='700' fill='#1f2328' text-anchor='middle'>AO3400 + flyback + snubber</text>
+<text x='650' y='321' font-size='9' font-weight='500' fill='#6a7076' text-anchor='middle'>+ LED status</text>
+<path d='M740,306 L830,306' fill='none' stroke='#b3541e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='830' y='286' width='215' height='44' rx='6' fill='#fff' stroke='#b3541e' stroke-width='1.5'/>
+<circle cx='848' cy='308' r='3.4' fill='#d1382c'/>
+<circle cx='864' cy='308' r='3.4' fill='#1f2328'/>
+<text x='878' y='303' font-size='10' font-weight='700' fill='#1f2328' text-anchor='start'>OUT3  Relay A — Glycol pump</text>
+<text x='878' y='319' font-size='9' font-weight='500' fill='#6a7076' text-anchor='start'>120V · motor inrush</text>
+<rect x='60' y='378' width='53.599999999999994' height='19' rx='4' fill='#1f2328' opacity='0.13'/>
+<rect x='60' y='378' width='53.599999999999994' height='19' rx='4' fill='none' stroke='#1f2328' stroke-width='1.1'/>
+<text x='86.8' y='392' font-size='11' font-weight='700' fill='#1f2328' text-anchor='middle'>GPIO23</text>
+<path d='M148,386 L300,386' fill='none' stroke='#1f2328' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M450,386 L560,386' fill='none' stroke='#0b8a5b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='560' y='366' width='180' height='44' rx='6' fill='#fdf6f2' stroke='#b3541e' stroke-width='1.5'/>
+<text x='650' y='385' font-size='10' font-weight='700' fill='#1f2328' text-anchor='middle'>AO3400 + flyback</text>
+<text x='650' y='401' font-size='9' font-weight='500' fill='#6a7076' text-anchor='middle'>+ LED status</text>
+<path d='M740,386 L830,386' fill='none' stroke='#b3541e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='830' y='366' width='215' height='44' rx='6' fill='#fff' stroke='#b3541e' stroke-width='1.5'/>
+<circle cx='848' cy='388' r='3.4' fill='#d1382c'/>
+<circle cx='864' cy='388' r='3.4' fill='#1f2328'/>
+<text x='878' y='383' font-size='10' font-weight='700' fill='#1f2328' text-anchor='start'>OUT4  Relay B — Ferment heat</text>
+<text x='878' y='399' font-size='9' font-weight='500' fill='#6a7076' text-anchor='start'>120V · on/off</text>
+<rect x='60' y='458' width='47.0' height='19' rx='4' fill='#1f2328' opacity='0.13'/>
+<rect x='60' y='458' width='47.0' height='19' rx='4' fill='none' stroke='#1f2328' stroke-width='1.1'/>
+<text x='83.5' y='472' font-size='11' font-weight='700' fill='#1f2328' text-anchor='middle'>GPIO5</text>
+<path d='M148,466 L300,466' fill='none' stroke='#1f2328' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='300' y='446' width='150' height='144' rx='6' fill='#eefaf3' stroke='#0b8a5b' stroke-width='1.5'/>
+<text x='375' y='468' font-size='11.5' font-weight='700' fill='#1f2328' text-anchor='middle'>U21 ISO7741</text>
+<text x='375' y='484' font-size='9.5' font-weight='500' fill='#6a7076' text-anchor='middle'>quad digital isolator</text>
+<path d='M450,466 L560,466' fill='none' stroke='#0b8a5b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='560' y='446' width='180' height='44' rx='6' fill='#fdf6f2' stroke='#b3541e' stroke-width='1.5'/>
+<text x='650' y='465' font-size='10' font-weight='700' fill='#1f2328' text-anchor='middle'>AO3400 + flyback</text>
+<text x='650' y='481' font-size='9' font-weight='500' fill='#6a7076' text-anchor='middle'>+ LED status</text>
+<path d='M740,466 L830,466' fill='none' stroke='#b3541e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='830' y='446' width='215' height='44' rx='6' fill='#fff' stroke='#b3541e' stroke-width='1.5'/>
+<circle cx='848' cy='468' r='3.4' fill='#d1382c'/>
+<circle cx='864' cy='468' r='3.4' fill='#1f2328'/>
+<text x='878' y='463' font-size='10' font-weight='700' fill='#1f2328' text-anchor='start'>OUT5  Relay C — spare</text>
+<text x='878' y='479' font-size='9' font-weight='500' fill='#6a7076' text-anchor='start'>120V</text>
+<rect x='60' y='538' width='47.0' height='19' rx='4' fill='#1f2328' opacity='0.13'/>
+<rect x='60' y='538' width='47.0' height='19' rx='4' fill='none' stroke='#1f2328' stroke-width='1.1'/>
+<text x='83.5' y='552' font-size='11' font-weight='700' fill='#1f2328' text-anchor='middle'>GPIO6</text>
+<path d='M148,546 L300,546' fill='none' stroke='#1f2328' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M450,546 L560,546' fill='none' stroke='#0b8a5b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='560' y='526' width='180' height='44' rx='6' fill='#fdf6f2' stroke='#b3541e' stroke-width='1.5'/>
+<text x='650' y='545' font-size='10' font-weight='700' fill='#1f2328' text-anchor='middle'>AO3400 + flyback</text>
+<text x='650' y='561' font-size='9' font-weight='500' fill='#6a7076' text-anchor='middle'>+ LED status</text>
+<path d='M740,546 L830,546' fill='none' stroke='#b3541e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='830' y='526' width='215' height='44' rx='6' fill='#fff' stroke='#b3541e' stroke-width='1.5'/>
+<circle cx='848' cy='548' r='3.4' fill='#d1382c'/>
+<circle cx='864' cy='548' r='3.4' fill='#1f2328'/>
+<text x='878' y='543' font-size='10' font-weight='700' fill='#1f2328' text-anchor='start'>OUT6  Relay D — spare</text>
+<text x='878' y='559' font-size='9' font-weight='500' fill='#6a7076' text-anchor='start'>120V</text>
+<text x='60' y='638' font-size='10.5' font-weight='600' fill='#6a7076' text-anchor='start'>Terminal = [ V+ | OUT ] · V+ from JP1/JP2-selected rail · FET sinks OUT to GND_ISO</text>
+</svg>

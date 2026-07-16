@@ -1,0 +1,173 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='640' height='590' viewBox='0 0 640 590' font-family='ui-sans-serif,Segoe UI,Roboto,Helvetica,Arial,sans-serif'>
+<rect width='640' height='590' fill='#ffffff'/>
+<text x='34' y='40' font-size='24' font-weight='700' fill='#1f2328'>Brewery Carrier HAT — PCB Placement</text>
+<text x='34' y='62' font-size='13' fill='#6a7076'>125×95 mm · 2-layer · all through-hole · plan drawing (positions finalized in KiCad)</text>
+<rect x='70.0' y='84.0' width='500.0' height='380.0' rx='10' fill='#0b5e2f' stroke='#073f20' stroke-width='2'/>
+<rect x='94.0' y='116.0' width='101.6' height='71.2' rx='2' fill='#ffffff' fill-opacity='0.06' stroke='#eef3ee' stroke-width='1.3'/>
+<text x='144.8' y='144.0' font-size='8.5' font-weight='700' fill='#eef3ee' text-anchor='middle'>MAX31865</text>
+<text x='144.8' y='168.0' font-size='9' font-weight='700' fill='#bfe3c8' text-anchor='middle'>HLT</text>
+<circle cx='105.2' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='115.36' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='125.52000000000001' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='135.68' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='145.84' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='156.0' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='166.16' cy='178.4' r='1.6' fill='#d8a72a'/>
+<rect x='110.0' y='102.0' width='69.6' height='12' rx='2' fill='#1f6feb'/>
+<text x='144.8' y='111.2' font-size='7' font-weight='700' fill='#ffffff' text-anchor='middle'>PT100</text>
+<rect x='210.8' y='116.0' width='101.6' height='71.2' rx='2' fill='#ffffff' fill-opacity='0.06' stroke='#eef3ee' stroke-width='1.3'/>
+<text x='261.6' y='144.0' font-size='8.5' font-weight='700' fill='#eef3ee' text-anchor='middle'>MAX31865</text>
+<text x='261.6' y='168.0' font-size='9' font-weight='700' fill='#bfe3c8' text-anchor='middle'>Mash</text>
+<circle cx='222.0' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='232.16' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='242.32' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='252.48' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='262.64' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='272.8' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='282.96000000000004' cy='178.4' r='1.6' fill='#d8a72a'/>
+<rect x='226.8' y='102.0' width='69.6' height='12' rx='2' fill='#1f6feb'/>
+<text x='261.6' y='111.2' font-size='7' font-weight='700' fill='#ffffff' text-anchor='middle'>PT100</text>
+<rect x='327.6' y='116.0' width='101.6' height='71.2' rx='2' fill='#ffffff' fill-opacity='0.06' stroke='#eef3ee' stroke-width='1.3'/>
+<text x='378.40000000000003' y='144.0' font-size='8.5' font-weight='700' fill='#eef3ee' text-anchor='middle'>MAX31865</text>
+<text x='378.40000000000003' y='168.0' font-size='9' font-weight='700' fill='#bfe3c8' text-anchor='middle'>Boil</text>
+<circle cx='338.8' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='348.96000000000004' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='359.12' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='369.28000000000003' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='379.44' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='389.6' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='399.76' cy='178.4' r='1.6' fill='#d8a72a'/>
+<rect x='343.6' y='102.0' width='69.6' height='12' rx='2' fill='#1f6feb'/>
+<text x='378.40000000000003' y='111.2' font-size='7' font-weight='700' fill='#ffffff' text-anchor='middle'>PT100</text>
+<rect x='444.4' y='116.0' width='101.6' height='71.2' rx='2' fill='#ffffff' fill-opacity='0.06' stroke='#eef3ee' stroke-width='1.3'/>
+<text x='495.2' y='144.0' font-size='8.5' font-weight='700' fill='#eef3ee' text-anchor='middle'>MAX31865</text>
+<text x='495.2' y='168.0' font-size='9' font-weight='700' fill='#bfe3c8' text-anchor='middle'>Ferm</text>
+<circle cx='455.59999999999997' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='465.76' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='475.91999999999996' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='486.08' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='496.23999999999995' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='506.4' cy='178.4' r='1.6' fill='#d8a72a'/>
+<circle cx='516.56' cy='178.4' r='1.6' fill='#d8a72a'/>
+<rect x='460.4' y='102.0' width='69.6' height='12' rx='2' fill='#1f6feb'/>
+<text x='495.2' y='111.2' font-size='7' font-weight='700' fill='#ffffff' text-anchor='middle'>PT100</text>
+<rect x='262.0' y='260.0' width='91.6' height='30.4' rx='2' fill='#ffffff' fill-opacity='0.06' stroke='#eef3ee' stroke-width='1.3'/>
+<text x='307.8' y='278.8' font-size='8.5' font-weight='700' fill='#eef3ee' text-anchor='middle'>ULN2803</text>
+<circle cx='267.6' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='277.76' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='287.91999999999996' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='298.08' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='308.24' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='318.4' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='328.56' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='338.72' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='348.88' cy='265.6' r='1.6' fill='#d8a72a'/>
+<circle cx='267.6' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='277.76' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='287.91999999999996' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='298.08' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='308.24' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='318.4' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='328.56' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='338.72' cy='284.8' r='1.6' fill='#d8a72a'/>
+<circle cx='348.88' cy='284.8' r='1.6' fill='#d8a72a'/>
+<rect x='486.0' y='116.0' width='60.0' height='32.0' rx='2' fill='#1f6feb'/>
+<circle cx='498.0' cy='140.8' r='1.6' fill='#d8a72a'/>
+<circle cx='512.0' cy='140.8' r='1.6' fill='#d8a72a'/>
+<text x='516.0' y='128.8' font-size='7.5' font-weight='700' fill='#ffffff' text-anchor='middle'>SSR HLT</text>
+<text x='516.0' y='144.8' font-size='6.5' font-weight='700' fill='#dbe7ff' text-anchor='middle'>V+  OUT</text>
+<rect x='486.0' y='160.0' width='60.0' height='32.0' rx='2' fill='#1f6feb'/>
+<circle cx='498.0' cy='184.8' r='1.6' fill='#d8a72a'/>
+<circle cx='512.0' cy='184.8' r='1.6' fill='#d8a72a'/>
+<text x='516.0' y='172.8' font-size='7.5' font-weight='700' fill='#ffffff' text-anchor='middle'>SSR BOIL</text>
+<text x='516.0' y='188.8' font-size='6.5' font-weight='700' fill='#dbe7ff' text-anchor='middle'>V+  OUT</text>
+<rect x='486.0' y='204.0' width='60.0' height='32.0' rx='2' fill='#1f6feb'/>
+<circle cx='498.0' cy='228.8' r='1.6' fill='#d8a72a'/>
+<circle cx='512.0' cy='228.8' r='1.6' fill='#d8a72a'/>
+<text x='516.0' y='216.8' font-size='7.5' font-weight='700' fill='#ffffff' text-anchor='middle'>RLY A</text>
+<text x='516.0' y='232.8' font-size='6.5' font-weight='700' fill='#dbe7ff' text-anchor='middle'>V+  OUT</text>
+<rect x='486.0' y='248.0' width='60.0' height='32.0' rx='2' fill='#1f6feb'/>
+<circle cx='498.0' cy='272.8' r='1.6' fill='#d8a72a'/>
+<circle cx='512.0' cy='272.8' r='1.6' fill='#d8a72a'/>
+<text x='516.0' y='260.8' font-size='7.5' font-weight='700' fill='#ffffff' text-anchor='middle'>RLY B</text>
+<text x='516.0' y='276.8' font-size='6.5' font-weight='700' fill='#dbe7ff' text-anchor='middle'>V+  OUT</text>
+<rect x='486.0' y='292.0' width='60.0' height='32.0' rx='2' fill='#1f6feb'/>
+<circle cx='498.0' cy='316.8' r='1.6' fill='#d8a72a'/>
+<circle cx='512.0' cy='316.8' r='1.6' fill='#d8a72a'/>
+<text x='516.0' y='304.8' font-size='7.5' font-weight='700' fill='#ffffff' text-anchor='middle'>RLY C</text>
+<text x='516.0' y='320.8' font-size='6.5' font-weight='700' fill='#dbe7ff' text-anchor='middle'>V+  OUT</text>
+<rect x='110.0' y='404.0' width='203.2' height='20.0' rx='2' fill='#15181c'/>
+<circle cx='115.2' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='125.36' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='135.52' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='145.68' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='155.84' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='166.0' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='176.16' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='186.32' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='196.48000000000002' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='206.64' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='216.8' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='226.96' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='237.12' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='247.28000000000003' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='257.44' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='267.6' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='277.76' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='287.92' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='298.08' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='308.24' cy='409.2' r='1.6' fill='#d8a72a'/>
+<circle cx='115.2' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='125.36' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='135.52' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='145.68' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='155.84' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='166.0' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='176.16' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='186.32' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='196.48000000000002' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='206.64' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='216.8' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='226.96' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='237.12' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='247.28000000000003' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='257.44' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='267.6' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='277.76' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='287.92' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='298.08' cy='419.36' r='1.6' fill='#d8a72a'/>
+<circle cx='308.24' cy='419.36' r='1.6' fill='#d8a72a'/>
+<text x='211.6' y='398.0' font-size='8' font-weight='700' fill='#1f2328' text-anchor='middle'>40-PIN GPIO  (seats onto Pi)</text>
+<rect x='334.0' y='404.0' width='52.0' height='32.0' rx='2' fill='#1f6feb'/>
+<circle cx='344.0' cy='428.8' r='1.6' fill='#d8a72a'/>
+<circle cx='358.0' cy='428.8' r='1.6' fill='#d8a72a'/>
+<text x='360.0' y='417.6' font-size='7' font-weight='700' fill='#ffffff' text-anchor='middle'>DRIVE V+</text>
+<rect x='402.0' y='404.0' width='52.0' height='32.0' rx='2' fill='#5a636e'/>
+<circle cx='412.0' cy='428.8' r='1.6' fill='#d8a72a'/>
+<circle cx='426.0' cy='428.8' r='1.6' fill='#d8a72a'/>
+<text x='428.0' y='417.6' font-size='7' font-weight='700' fill='#ffffff' text-anchor='middle'>SELECTOR</text>
+<circle cx='86.0' cy='100.0' r='5.4' fill='#c9cdd2'/>
+<circle cx='86.0' cy='100.0' r='5.4' fill='none' stroke='#073f20' stroke-width='1'/>
+<circle cx='86.0' cy='100.0' r='2.8' fill='#ffffff'/>
+<circle cx='554.0' cy='100.0' r='5.4' fill='#c9cdd2'/>
+<circle cx='554.0' cy='100.0' r='5.4' fill='none' stroke='#073f20' stroke-width='1'/>
+<circle cx='554.0' cy='100.0' r='2.8' fill='#ffffff'/>
+<circle cx='86.0' cy='448.0' r='5.4' fill='#c9cdd2'/>
+<circle cx='86.0' cy='448.0' r='5.4' fill='none' stroke='#073f20' stroke-width='1'/>
+<circle cx='86.0' cy='448.0' r='2.8' fill='#ffffff'/>
+<circle cx='554.0' cy='448.0' r='5.4' fill='#c9cdd2'/>
+<circle cx='554.0' cy='448.0' r='5.4' fill='none' stroke='#073f20' stroke-width='1'/>
+<circle cx='554.0' cy='448.0' r='2.8' fill='#ffffff'/>
+<line x1='70.0' y1='500.0' x2='570.0' y2='500.0' stroke='#6a7076' stroke-width='1'/>
+<line x1='70.0' y1='495.0' x2='70.0' y2='505.0' stroke='#6a7076' stroke-width='1'/>
+<line x1='570.0' y1='495.0' x2='570.0' y2='505.0' stroke='#6a7076' stroke-width='1'/>
+<text x='320.0' y='516.0' font-size='11' fill='#6a7076' text-anchor='middle'>125 mm</text>
+<rect x='40' y='528' width='14' height='14' rx='3' fill='#d8a72a'/>
+<text x='62' y='539' font-size='12' fill='#1f2328'>Gold = through-hole pad</text>
+<rect x='340' y='528' width='14' height='14' rx='3' fill='#1f6feb'/>
+<text x='362' y='539' font-size='12' fill='#1f2328'>Blue = screw terminal</text>
+<rect x='40' y='550' width='14' height='14' rx='3' fill='#0b5e2f'/>
+<text x='62' y='561' font-size='12' fill='#1f2328'>Green = PCB / solder mask</text>
+<rect x='340' y='550' width='14' height='14' rx='3' fill='#c9cdd2'/>
+<text x='362' y='561' font-size='12' fill='#1f2328'>Gray = M2.5 mounting hole</text>
+</svg>

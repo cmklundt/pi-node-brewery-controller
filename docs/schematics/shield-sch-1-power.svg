@@ -1,0 +1,59 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='560' viewBox='0 0 1080 560' font-family='ui-sans-serif,Segoe UI,Roboto,Helvetica,Arial,sans-serif'>
+<rect width='1080' height='100%' fill='#fff'/>
+<text x='30' y='36' font-size='21' font-weight='700' fill='#1f2328'>Sheet 1 — Power</text>
+<text x='30' y='57' font-size='12' fill='#6a7076'>12V in → protection → 5V/4A buck → ideal diode → Pi · rails + per-bank drive jumper</text>
+<rect x='70' y='140' width='150' height='66' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='145.0' y='166' font-size='12.5' font-weight='700' fill='#1f2328' text-anchor='middle'>J1  DC JACK</text>
+<text x='145.0' y='185' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='middle'>12V / 4A brick</text>
+<rect x='250' y='140' width='190' height='66' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='345.0' y='166' font-size='12.5' font-weight='700' fill='#1f2328' text-anchor='middle'>Q1 P-FET + D1 TVS</text>
+<text x='345.0' y='185' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='middle'>reverse-polarity + SMAJ16A</text>
+<rect x='470' y='140' width='120' height='66' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='530.0' y='166' font-size='12.5' font-weight='700' fill='#1f2328' text-anchor='middle'>F1 PTC 3A</text>
+<text x='530.0' y='185' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='middle'>resettable fuse</text>
+<rect x='620' y='140' width='160' height='66' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='700.0' y='166' font-size='12.5' font-weight='700' fill='#1f2328' text-anchor='middle'>U1 TPS5450</text>
+<text x='700.0' y='185' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='middle'>12V→5V buck, 4A</text>
+<rect x='810' y='140' width='180' height='66' rx='6' fill='#f7f7f5' stroke='#3a3f45' stroke-width='1.5'/>
+<text x='900.0' y='166' font-size='12.5' font-weight='700' fill='#1f2328' text-anchor='middle'>U2 LM66100</text>
+<text x='900.0' y='185' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='middle'>ideal diode → Pi 5V</text>
+<path d='M220,173 L250,173' fill='none' stroke='#d1382c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M440,173 L470,173' fill='none' stroke='#d1382c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M590,173 L620,173' fill='none' stroke='#d1382c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M780,173 L810,173' fill='none' stroke='#e8820c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M990,173 L1030,173 L1030,260' fill='none' stroke='#e8820c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='900' y='260' width='140' height='54' rx='6' fill='#fff5ec' stroke='#e8820c' stroke-width='1.5'/>
+<text x='970' y='282' font-size='12' font-weight='700' fill='#1f2328' text-anchor='middle'>Pi 5V</text>
+<text x='970' y='300' font-size='10' font-weight='500' fill='#6a7076' text-anchor='middle'>pins 2 / 4</text>
+<text x='70' y='316' font-size='13' font-weight='700' fill='#1f2328' text-anchor='start'>Rails</text>
+<path d='M70,330 L120,330' fill='none' stroke='#d1382c' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='132' y='334' font-size='11.5' font-weight='600' fill='#1f2328' text-anchor='start'>+12V  (drive side, relay coils)</text>
+<path d='M70,364 L120,364' fill='none' stroke='#e8820c' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='132' y='368' font-size='11.5' font-weight='600' fill='#1f2328' text-anchor='start'>+5V   (Pi + drive option)</text>
+<path d='M70,398 L120,398' fill='none' stroke='#c9a227' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='132' y='402' font-size='11.5' font-weight='600' fill='#1f2328' text-anchor='start'>+3V3  (from Pi — sensor domain only)</text>
+<path d='M70,432 L120,432' fill='none' stroke='#6a7076' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='132' y='436' font-size='11.5' font-weight='600' fill='#1f2328' text-anchor='start'>GND / GND_ISO  (separate domains)</text>
+<rect x='520' y='300' width='470' height='180' rx='6' fill='#fdf6f2' stroke='#b3541e' stroke-width='1.5'/>
+<text x='755' y='326' font-size='13' font-weight='700' fill='#1f2328' text-anchor='middle'>JP1 / JP2 — Drive rail select (per output bank)</text>
+<text x='755' y='345' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='middle'>Sets what feeds each terminal&#x27;s V+ · MOSFET sinks to GND_ISO either way</text>
+<rect x='540' y='360' width='430' height='38' rx='5' fill='#fff' stroke='#b3541e' stroke-width='1.2'/>
+<rect x='552' y='368' width='27.2' height='19' rx='4' fill='#e8820c' opacity='0.13'/>
+<rect x='552' y='368' width='27.2' height='19' rx='4' fill='none' stroke='#e8820c' stroke-width='1.1'/>
+<text x='565.6' y='382' font-size='11' font-weight='700' fill='#e8820c' text-anchor='middle'>5V</text>
+<rect x='600' y='368' width='33.8' height='19' rx='4' fill='#d1382c' opacity='0.13'/>
+<rect x='600' y='368' width='33.8' height='19' rx='4' fill='none' stroke='#d1382c' stroke-width='1.1'/>
+<text x='616.9' y='382' font-size='11' font-weight='700' fill='#d1382c' text-anchor='middle'>12V</text>
+<text x='650' y='384' font-size='11.5' font-weight='700' fill='#1f2328' text-anchor='start'>JP1  →  SSR bank (OUT1–2)</text>
+<text x='650' y='396' font-size='9.5' font-weight='500' fill='#6a7076' text-anchor='start'>5V default · SSR ctrl 3–32V, either works</text>
+<rect x='540' y='406' width='430' height='38' rx='5' fill='#fff' stroke='#b3541e' stroke-width='1.2'/>
+<rect x='552' y='414' width='27.2' height='19' rx='4' fill='#e8820c' opacity='0.13'/>
+<rect x='552' y='414' width='27.2' height='19' rx='4' fill='none' stroke='#e8820c' stroke-width='1.1'/>
+<text x='565.6' y='428' font-size='11' font-weight='700' fill='#e8820c' text-anchor='middle'>5V</text>
+<rect x='600' y='414' width='33.8' height='19' rx='4' fill='#d1382c' opacity='0.13'/>
+<rect x='600' y='414' width='33.8' height='19' rx='4' fill='none' stroke='#d1382c' stroke-width='1.1'/>
+<text x='616.9' y='428' font-size='11' font-weight='700' fill='#d1382c' text-anchor='middle'>12V</text>
+<text x='650' y='430' font-size='11.5' font-weight='700' fill='#1f2328' text-anchor='start'>JP2  →  Relay bank (OUT3–6)</text>
+<text x='650' y='442' font-size='9.5' font-weight='500' fill='#6a7076' text-anchor='start'>5V default · set 12V ONLY if coils are 12V</text>
+<text x='755' y='472' font-size='10' font-weight='700' fill='#d1382c' text-anchor='middle'>⚠ silkscreen default = 5V · 12V into a 5V coil destroys it</text>
+</svg>

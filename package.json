@@ -1,0 +1,21 @@
+{
+  "name": "brewery-controller",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Touch control UI for a HERMS electric brewery on a Raspberry Pi + custom shield",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
+  }
+}

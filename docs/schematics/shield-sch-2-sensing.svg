@@ -1,0 +1,77 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='620' viewBox='0 0 1080 620' font-family='ui-sans-serif,Segoe UI,Roboto,Helvetica,Arial,sans-serif'>
+<rect width='1080' height='100%' fill='#fff'/>
+<text x='30' y='36' font-size='21' font-weight='700' fill='#1f2328'>Sheet 2 — Sensing (3V3 domain)</text>
+<text x='30' y='57' font-size='12' fill='#6a7076'>4× MAX31865 bare-chip · 3-wire PT100 · 430Ω ref · + 1-Wire and flow inputs</text>
+<rect x='60' y='110' width='225' height='190' rx='6' fill='#eef4ff' stroke='#1f6feb' stroke-width='1.5'/>
+<text x='172.5' y='136' font-size='12' font-weight='700' fill='#1f2328' text-anchor='middle'>U10  MAX31865ATP+</text>
+<text x='172.5' y='154' font-size='12' font-weight='700' fill='#1f6feb' text-anchor='middle'>→ HLT</text>
+<rect x='90' y='88' width='165' height='18' rx='3' fill='#1f6feb'/>
+<text x='172.5' y='101' font-size='7.6' font-weight='700' fill='#fff' text-anchor='middle'>J  PT100  RTD+ / RTDIN+ / RTD−</text>
+<path d='M172.5,106 L172.5,110' fill='none' stroke='#1f6feb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='76' y='180' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• Rref 430Ω 0.1%</text>
+<text x='76' y='198' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• RC input filter (100Ω/10nF)</text>
+<text x='76' y='216' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 100nF decouple, VDD=3V3</text>
+<text x='76' y='234' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 3-wire mode, 50/60Hz filt.</text>
+<text x='76' y='252' font-size='10' font-weight='700' fill='#8250df' text-anchor='start'>• CS ← CE0 / GPIO8</text>
+<text x='76' y='270' font-size='10' font-weight='500' fill='#6a7076' text-anchor='start'>• DRDY  (n/c)</text>
+<path d='M172.5,300 L172.5,326' fill='none' stroke='#1f6feb' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+<circle cx='172.5' cy='326' r='3' fill='#1f6feb'/>
+<rect x='310' y='110' width='225' height='190' rx='6' fill='#eef4ff' stroke='#1f6feb' stroke-width='1.5'/>
+<text x='422.5' y='136' font-size='12' font-weight='700' fill='#1f2328' text-anchor='middle'>U11  MAX31865ATP+</text>
+<text x='422.5' y='154' font-size='12' font-weight='700' fill='#1f6feb' text-anchor='middle'>→ Mash</text>
+<rect x='340' y='88' width='165' height='18' rx='3' fill='#1f6feb'/>
+<text x='422.5' y='101' font-size='7.6' font-weight='700' fill='#fff' text-anchor='middle'>J  PT100  RTD+ / RTDIN+ / RTD−</text>
+<path d='M422.5,106 L422.5,110' fill='none' stroke='#1f6feb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='326' y='180' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• Rref 430Ω 0.1%</text>
+<text x='326' y='198' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• RC input filter (100Ω/10nF)</text>
+<text x='326' y='216' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 100nF decouple, VDD=3V3</text>
+<text x='326' y='234' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 3-wire mode, 50/60Hz filt.</text>
+<text x='326' y='252' font-size='10' font-weight='700' fill='#8250df' text-anchor='start'>• CS ← CE1 / GPIO7</text>
+<text x='326' y='270' font-size='10' font-weight='500' fill='#6a7076' text-anchor='start'>• DRDY  (n/c)</text>
+<path d='M422.5,300 L422.5,326' fill='none' stroke='#1f6feb' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+<circle cx='422.5' cy='326' r='3' fill='#1f6feb'/>
+<rect x='560' y='110' width='225' height='190' rx='6' fill='#eef4ff' stroke='#1f6feb' stroke-width='1.5'/>
+<text x='672.5' y='136' font-size='12' font-weight='700' fill='#1f2328' text-anchor='middle'>U12  MAX31865ATP+</text>
+<text x='672.5' y='154' font-size='12' font-weight='700' fill='#1f6feb' text-anchor='middle'>→ Boil</text>
+<rect x='590' y='88' width='165' height='18' rx='3' fill='#1f6feb'/>
+<text x='672.5' y='101' font-size='7.6' font-weight='700' fill='#fff' text-anchor='middle'>J  PT100  RTD+ / RTDIN+ / RTD−</text>
+<path d='M672.5,106 L672.5,110' fill='none' stroke='#1f6feb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='576' y='180' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• Rref 430Ω 0.1%</text>
+<text x='576' y='198' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• RC input filter (100Ω/10nF)</text>
+<text x='576' y='216' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 100nF decouple, VDD=3V3</text>
+<text x='576' y='234' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 3-wire mode, 50/60Hz filt.</text>
+<text x='576' y='252' font-size='10' font-weight='700' fill='#8250df' text-anchor='start'>• CS ← GPIO25</text>
+<text x='576' y='270' font-size='10' font-weight='500' fill='#6a7076' text-anchor='start'>• DRDY  (n/c)</text>
+<path d='M672.5,300 L672.5,326' fill='none' stroke='#1f6feb' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+<circle cx='672.5' cy='326' r='3' fill='#1f6feb'/>
+<rect x='810' y='110' width='225' height='190' rx='6' fill='#eef4ff' stroke='#1f6feb' stroke-width='1.5'/>
+<text x='922.5' y='136' font-size='12' font-weight='700' fill='#1f2328' text-anchor='middle'>U13  MAX31865ATP+</text>
+<text x='922.5' y='154' font-size='12' font-weight='700' fill='#1f6feb' text-anchor='middle'>→ Ferm</text>
+<rect x='840' y='88' width='165' height='18' rx='3' fill='#1f6feb'/>
+<text x='922.5' y='101' font-size='7.6' font-weight='700' fill='#fff' text-anchor='middle'>J  PT100  RTD+ / RTDIN+ / RTD−</text>
+<path d='M922.5,106 L922.5,110' fill='none' stroke='#1f6feb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='826' y='180' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• Rref 430Ω 0.1%</text>
+<text x='826' y='198' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• RC input filter (100Ω/10nF)</text>
+<text x='826' y='216' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 100nF decouple, VDD=3V3</text>
+<text x='826' y='234' font-size='10' font-weight='600' fill='#1f2328' text-anchor='start'>• 3-wire mode, 50/60Hz filt.</text>
+<text x='826' y='252' font-size='10' font-weight='700' fill='#8250df' text-anchor='start'>• CS ← GPIO24</text>
+<text x='826' y='270' font-size='10' font-weight='500' fill='#6a7076' text-anchor='start'>• DRDY  (n/c)</text>
+<path d='M922.5,300 L922.5,326' fill='none' stroke='#1f6feb' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+<circle cx='922.5' cy='326' r='3' fill='#1f6feb'/>
+<path d='M172.5,326 L922.5,326' fill='none' stroke='#1f6feb' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/>
+<text x='60' y='316' font-size='11' font-weight='700' fill='#1f6feb' text-anchor='start'>SPI0 bus — SCK GPIO11 (23) · SDI GPIO10 (19) · SDO GPIO9 (21)   shared</text>
+<path d='M172.5,326 L60,326 L60,376' fill='none' stroke='#1f6feb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>
+<rect x='52' y='376' width='93.19999999999999' height='19' rx='4' fill='#1f6feb' opacity='0.13'/>
+<rect x='52' y='376' width='93.19999999999999' height='19' rx='4' fill='none' stroke='#1f6feb' stroke-width='1.1'/>
+<text x='98.6' y='390' font-size='11' font-weight='700' fill='#1f6feb' text-anchor='middle'>to Pi header</text>
+<rect x='60' y='421' width='470' height='72' rx='6' fill='#fffdf2' stroke='#c9a227' stroke-width='1.5'/>
+<text x='76' y='447' font-size='12' font-weight='700' fill='#1f2328' text-anchor='start'>1-Wire  DS18B20</text>
+<text x='76' y='467' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='start'>GPIO4 · 4.7k pull-up to 3V3 · bonus/backup probe</text>
+<rect x='440' y='443' width='72' height='30' rx='3' fill='#c9a227' opacity='0.85'/>
+<text x='476' y='463' font-size='9.5' font-weight='700' fill='#fff' text-anchor='middle'>screw</text>
+<rect x='570' y='421' width='470' height='72' rx='6' fill='#fffdf2' stroke='#c9a227' stroke-width='1.5'/>
+<text x='586' y='447' font-size='12' font-weight='700' fill='#1f2328' text-anchor='start'>Flow 1 / Flow 2</text>
+<text x='586' y='467' font-size='10.5' font-weight='500' fill='#6a7076' text-anchor='start'>GPIO12 / GPIO13 · pull-up + RC debounce</text>
+<rect x='950' y='443' width='72' height='30' rx='3' fill='#c9a227' opacity='0.85'/>
+<text x='986' y='463' font-size='9.5' font-weight='700' fill='#fff' text-anchor='middle'>screw</text>
+</svg>
