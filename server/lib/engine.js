@@ -130,7 +130,10 @@ export class Engine extends EventEmitter {
         meta.activeTarget = target;
         targets[c.sensor] = target;
         if (t != null) {
-          let duty = this.pids[c.id].update(target, t, 1);
+          // learned feedforward: duty that historically holds this temp
+          const amb = this.config.ambientF ?? 62;
+          const ff = (c.params.lossCoeff || 0) * Math.max(0, target - amb);
+          let duty = this.pids[c.id].update(target, t, 1, ff);
           // HERMS guard: never let the HLT run away past mash target + cap
           const cap = c.constraints?.hltOvershootCapF;
           if (cap != null) {
@@ -138,6 +141,17 @@ export class Engine extends EventEmitter {
             if (hlt != null && hlt >= target + cap) duty = 0;
           }
           duties[c.actor] = Math.max(duties[c.actor] || 0, duty);
+          // learn: after holding within ±0.75°F for 30 consecutive ticks
+          // (a true settle, not the approach transient), the applied duty IS
+          // the loss curve — remember duty-per-°F-above-ambient (EMA)
+          this._settle ??= {};
+          this._settle[c.id] = Math.abs(target - t) < 0.75 ? (this._settle[c.id] || 0) + 1 : 0;
+          if (this._settle[c.id] > 30 && duty > 1 && duty < 98 && t > amb + 5) {
+            const k = duty / (t - amb);
+            const prev = c.params.lossCoeff;
+            c.params.lossCoeff = +((prev ? 0.98 * prev + 0.02 * k : k)).toFixed(4);
+            this._learnedDirty = true;
+          }
         }
       }
 
@@ -215,6 +229,10 @@ export class Engine extends EventEmitter {
     }
 
     // 7 — bookkeeping
+    if (this._learnedDirty && this.uptimeSec % 120 === 0) {
+      this._learnedDirty = false;
+      this.emit("learned"); // index.js persists the learned coefficients
+    }
     this.history.sample(this.uptimeSec, this.readings, { ...this.duties }, targets);
     this.alerts.watch(this.uptimeSec, ctrlState, this.readings);
     this.alerts.tickTimers();

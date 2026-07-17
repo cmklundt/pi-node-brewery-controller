@@ -181,8 +181,9 @@ function StepRunner({ state, config }) {
         </div>
       </div>
 
-      {/* per-step tuning */}
-      {!manual && step.target != null && (
+      {/* per-step tuning — live: changes apply on the next control tick,
+          including during manual hold-steps and confirm-holds */}
+      {step.target != null && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
           <Stepper label="Target" v={step.target} unit="°F" step={1} c={pc}
             set={(v) => post("/api/steps/update", { index: st.active, patch: { target: clamp(v, 32, 215) } })} />

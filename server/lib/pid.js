@@ -20,14 +20,17 @@ export class PID {
     }
   }
 
-  /** @param target °F  @param measure °F  @param dt seconds  @returns duty 0..100 */
-  update(target, measure, dt = 1) {
+  /** @param target °F  @param measure °F  @param dt seconds
+   *  @param ff feedforward duty (learned steady-state baseline) — the PID
+   *  then only trims the residual, so it settles in seconds, not minutes.
+   *  @returns duty 0..100 */
+  update(target, measure, dt = 1, ff = 0) {
     const err = target - measure;
     this.integral = clamp(this.integral + err * this.ki * dt, -this.integralClamp, this.integralClamp);
     let d = 0;
     if (this.kd && this.lastMeasure !== null) d = -this.kd * (measure - this.lastMeasure) / dt;
     this.lastMeasure = measure;
-    const out = this.kp * err + this.integral + d;
+    const out = ff + this.kp * err + this.integral + d;
     return clamp(out, 0, this.maxOutput);
   }
 }

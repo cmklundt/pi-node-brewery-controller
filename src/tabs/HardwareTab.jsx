@@ -166,7 +166,8 @@ export default function HardwareTab({ state, config, setConfig }) {
         {cfg.controllers.map((c, i) => (
           <Row key={i} k={c.name} ok
             v={c.type === "pid" ? `kp ${c.params.kp} · ki ${c.params.ki}` : c.type === "power" ? `${c.params.power}%` : `±${c.params.deadband}°F`}
-            sub={c.type === "hysteresis" ? `${c.sensor} → ${c.coolActor}/${c.heatActor}` : `${c.sensor} → ${c.actor} · ${c.type}`}
+            sub={(c.type === "hysteresis" ? `${c.sensor} → ${c.coolActor}/${c.heatActor}` : `${c.sensor} → ${c.actor} · ${c.type}`)
+              + (c.params.lossCoeff ? ` · learned ff ${c.params.lossCoeff} %/°F` : "")}
             onClick={draft ? () => setEditing({ kind: "controllers", index: i }) : undefined} />
         ))}
         {editing?.kind === "controllers" && (() => {

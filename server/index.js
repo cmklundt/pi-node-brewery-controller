@@ -12,7 +12,7 @@ import http from "node:http";
 import https from "node:https";
 import fs from "node:fs";
 import path from "node:path";
-import { loadConfig, DATA_DIR } from "./lib/config.js";
+import { loadConfig, saveConfig, DATA_DIR } from "./lib/config.js";
 import { Engine } from "./lib/engine.js";
 import { AlertCenter } from "./lib/alerts.js";
 import { PushCenter } from "./lib/push.js";
@@ -53,6 +53,8 @@ const alerts = new AlertCenter({
 });
 
 const engine = new Engine({ config, driver, alerts, history });
+// persist learned duty-cycle coefficients so the next brew starts warm
+engine.on("learned", () => { try { saveConfig(config); } catch {} });
 
 const app = buildApp({
   engine, alerts, push, history,
