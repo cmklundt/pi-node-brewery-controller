@@ -63,6 +63,7 @@ export default function Herms({ config, state, onSelectVessel }) {
           : <Kettle key={v.id} x={i * VW + 26} v={v} tempR={temp(v)} targetF={target(v)}
               levelGal={level(v)} elementDuty={duty(v.element)} elementOn={on(v.element)}
               coil={v.graphic === "kettle-coil"} mash={v.kind === "mashtun"}
+              boilF={state.boilingPointF ?? 212}
               onTap={() => onSelectVessel?.(v.id)} />
         )}
 
@@ -89,7 +90,7 @@ function kettleGeom(v, x) {
   return { x, W, H, top, cx: x + W / 2 };
 }
 
-function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, mash, onTap }) {
+function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, mash, boilF = 212, onTap }) {
   const { W, H, top, cx } = kettleGeom(v, x);
   const tempF = tempR?.tempF;
   const fault = tempR?.fault;
@@ -124,8 +125,8 @@ function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, 
           {[0, 1, 2].map((i) => <ellipse key={i} cx={cx} cy={FLOOR - 52 + i * 13} rx="46" ry="6.5" />)}
         </g>
       )}
-      {/* steam near boil */}
-      {tempF > 205 && [0, 1, 2].map((i) => (
+      {/* steam near the LOCAL boiling point (altitude-aware) */}
+      {tempF > boilF - 6 && [0, 1, 2].map((i) => (
         <path key={i} d={`M ${x + 44 + i * 40} ${top - 12} q 6 -9 0 -18 q -6 -9 0 -16`}
           fill="none" stroke={C.dim} strokeWidth="2" opacity="0.5" style={{ animation: `pulse ${1.2 + i * .3}s infinite` }} />
       ))}

@@ -19,6 +19,7 @@
 import { EventEmitter } from "node:events";
 import { PID, Hysteresis, clamp } from "./pid.js";
 import { StepEngine } from "./steps.js";
+import { boilingPointF } from "../../src/hardware.js";
 
 const MOD_WINDOW_MS = 4000;   // SSR time-proportioning window
 const MOD_TICK_MS = 250;
@@ -102,10 +103,14 @@ export class Engine extends EventEmitter {
 
     // 3 — step engine gets the temp of its step's vessel
     const step = this.steps.step;
+    // altitude: no target can exceed the local boiling point
+    const bp = boilingPointF(this.config.altitudeFt);
+    const effTarget = (t) => (t != null && t > bp ? bp : t);
     if (step) {
       const vessel = this.config.vessels.find((v) => v.id === step.vessel);
       const dt = this.driver.name === "sim" ? (this.driver.speed || 1) : 1;
-      this.steps.tick(this.readings[vessel?.sensor]?.tempF ?? null, dt);
+      const ovr = step.target != null && step.target > bp ? bp : null;
+      this.steps.tick(this.readings[vessel?.sensor]?.tempF ?? null, dt, ovr);
     }
 
     // 4 — controllers -> duties
@@ -120,7 +125,7 @@ export class Engine extends EventEmitter {
 
       const brewActive = this.steps.running || this.steps.awaiting; // hold temps during confirm-holds
       if (c.type === "pid" && enabled && brewActive && this.steps.step?.target != null) {
-        const target = this.steps.step.target;
+        const target = effTarget(this.steps.step.target);
         const t = this.readings[c.sensor]?.tempF;
         meta.activeTarget = target;
         targets[c.sensor] = target;
@@ -138,10 +143,11 @@ export class Engine extends EventEmitter {
 
       if (c.type === "power" && enabled && (this.steps.running || this.steps.awaiting) && this.steps.step?.target != null) {
         const t = this.readings[c.sensor]?.tempF;
-        meta.activeTarget = this.steps.step.target;
-        targets[c.sensor] = this.steps.step.target;
+        const target = effTarget(this.steps.step.target); // local boiling point at altitude
+        meta.activeTarget = target;
+        targets[c.sensor] = target;
         // full power to the boil, throttle to the power setting once boiling
-        if (t != null) duties[c.actor] = t < this.steps.step.target - 2 ? 100 : c.params.power;
+        if (t != null) duties[c.actor] = t < target - 2 ? 100 : c.params.power;
       }
 
       if (c.type === "hysteresis" && enabled) {
@@ -294,6 +300,7 @@ export class Engine extends EventEmitter {
       timers: this.alerts.timerSnapshot(),
       levels: this.levels,
       inputs: this.inputStates || {},
+      boilingPointF: boilingPointF(this.config.altitudeFt),
       simSpeed: this.driver.speed,
       paused: this.paused,
     };

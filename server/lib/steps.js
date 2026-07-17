@@ -100,15 +100,18 @@ export class StepEngine {
   }
 
   /** once per engine second. sensedF = temp of the step's vessel (or null);
-   *  dt = simulated seconds per real second. */
-  tick(sensedF, dt = 1) {
+   *  dt = simulated seconds per real second; targetOverride = engine-adjusted
+   *  target (e.g. local boiling point at altitude, which can sit below the
+   *  recipe's written 212°F). */
+  tick(sensedF, dt = 1, targetOverride = null) {
     const step = this.step;
     if (!step || !this.running || this.awaiting) return;
 
     const controlled = step.kind !== "manual";
     if (controlled) {
       if (sensedF == null) return;
-      const reached = sensedF >= step.target - 0.6;
+      const target = targetOverride ?? step.target;
+      const reached = sensedF >= target - 0.6;
       if (reached && !this.atTemp) this.emit("at-temp", { index: this.active, step, tempF: sensedF });
       this.atTemp = reached;
       if (!reached) return;

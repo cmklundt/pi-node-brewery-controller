@@ -35,6 +35,8 @@ export class SimDriver {
 
   async init(config) {
     this.config = config;
+    // local boiling point — the sim's boil ceiling follows altitude
+    this.bp = 212 - 1.9 * ((+config.altitudeFt || 0) / 1000);
     for (const a of config.actors) this.actorState[a.id] = false;
     return this;
   }
@@ -47,7 +49,7 @@ export class SimDriver {
       const nx = { ...t };
       nx.hlt += on("hltElement") * K.hltGain - (t.hlt - AMBIENT) * K.hltLoss;
       nx.boil += on("boilElement") * K.boilGain - (t.boil - AMBIENT) * K.boilLoss;
-      if (nx.boil > 212.4) nx.boil = 212.4; // rolling boil ceiling
+      if (nx.boil > this.bp + 0.4) nx.boil = this.bp + 0.4; // rolling boil ceiling (altitude-aware)
       if (on("recircPump")) {
         // HERMS recirc at ~5 gpm equalizes mash toward HLT within minutes;
         // equal and opposite so the coil conserves energy between equal volumes

@@ -190,6 +190,20 @@ export default function HardwareTab({ state, config, setConfig }) {
               onChange={(v) => setDraft({ ...draft, interlock: { ...draft.interlock, senseGpio: v === "" || isNaN(v) ? null : v } })} />
             <Field label="Buzzer GPIO" type="number" value={cfg.aux?.buzzer ?? ""}
               onChange={(v) => setDraft({ ...draft, aux: { ...draft.aux, buzzer: v === "" || isNaN(v) ? null : v } })} />
+            <Field label="Altitude (ft)" type="number" value={cfg.altitudeFt ?? 0}
+              onChange={(v) => setDraft({ ...draft, altitudeFt: +v || 0 })} />
+            <div style={{ background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderLeft: `3px solid ${C.glycol}88`, borderRadius: 3, padding: "8px 10px", alignSelf: "end" }}>
+              <div style={{ ...legend, fontSize: 9.5, fontWeight: 600, color: C.dim }}>ƒ Water boils at</div>
+              <div style={{ ...mono, fontSize: 15, color: C.glycol, marginTop: 2 }}>
+                {(212 - 1.9 * ((+cfg.altitudeFt || 0) / 1000)).toFixed(1)}°F
+              </div>
+            </div>
+          </div>
+        )}
+        {!draft && (cfg.altitudeFt || 0) > 0 && (
+          <div style={{ ...mono, fontSize: 11, color: C.dim, marginTop: 8 }}>
+            Altitude {cfg.altitudeFt} ft → water boils at {(212 - 1.9 * (cfg.altitudeFt / 1000)).toFixed(1)}°F.
+            Boil steps gate on this, not 212°F.
           </div>
         )}
         <Note>The mash controller drives the HLT element — that mapping is the whole trick of HERMS. Don't "fix" it.</Note>

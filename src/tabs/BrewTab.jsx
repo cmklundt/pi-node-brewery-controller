@@ -191,6 +191,26 @@ function StepRunner({ state, config }) {
         </div>
       )}
 
+      {/* boil vigor — a human call: the sensor reads the same at a simmer
+          and an eruption, so the on/off ratio is yours to dial in */}
+      {step.vessel === "boil" && (() => {
+        const bc = config.controllers.find((c) => c.type === "power");
+        if (!bc) return null;
+        return (
+          <div style={{ marginTop: 12, padding: "10px 12px", background: C.bezel, borderRadius: 3, border: `1px solid ${C.ruleSoft}` }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
+              <Stepper label={`Boil vigor — % of time element is on once boiling (at ${state.boilingPointF ?? 212}°F here)`}
+                v={bc.params.power} unit="%" step={5} c={C.ember}
+                set={(v) => post(`/api/controllers/${bc.id}`, { power: clamp(v, 20, 100) })} />
+            </div>
+            <div style={{ fontSize: 10.5, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>
+              Watch the kettle, not the screen: nudge down if it's climbing the walls, up if it's lazy.
+              The temp sensor can't tell a simmer from an eruption — this knob is yours.
+            </div>
+          </div>
+        );
+      })()}
+
       {/* controls */}
       <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
         {st.awaiting ? (

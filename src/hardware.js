@@ -86,3 +86,10 @@ export const SAFETY = {
 
 export const PIN_COUNT_USED =
   3 + SENSORS.length + ACTORS.length + 2 /* flow */ + 1 /* selector */ + 3 /* encoder */ + 1 /* buzzer */;
+
+/* ── Altitude ─────────────────────────────────────────────────
+ * Water's boiling point drops ~1.9°F per 1000 ft. At altitude the boil
+ * step must gate on the LOCAL boiling point, not 212°F, or it never
+ * completes. Configurable in the Hardware tab (config.altitudeFt). */
+export const boilingPointF = (altitudeFt = 0) =>
+  +(212 - 1.9 * ((+altitudeFt || 0) / 1000)).toFixed(1);

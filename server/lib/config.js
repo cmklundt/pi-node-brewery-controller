@@ -21,6 +21,7 @@ export function defaultConfig() {
     version: 1,
     name: "HERMS Control",
     units: "F",
+    altitudeFt: 6900,   // brewery elevation — sets the local boiling point (~198.9°F here)
     rtd: { ...HW.RTD },
     inverted: HW.INVERTED,
     aux: { buzzer: HW.AUX.buzzer, oneWire: HW.AUX.oneWire, flow: HW.AUX.flow },
