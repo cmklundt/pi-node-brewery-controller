@@ -40,11 +40,14 @@ export class AlertCenter {
     switch (type) {
       case "brew-started": return this.event(type, `Brew started — ${p.recipe}`, "ok", p);
       case "step-start":   return this.event(type, `Step ${p.index + 1} — ${p.step.name}`, "info", p);
-      case "at-temp":      return this.event(type, `${p.step.name}: at temperature (${p.tempF.toFixed(1)}°F)`, "alert", p);
-      case "hop":          return this.event(type, `Hop addition — ${p.name}`, "alert", p);
-      case "step-complete":return this.event(type, `Step complete — ${p.step.name}`, "alert", p);
+      case "at-temp":      return this.event(type, `${p.step.name}: at temperature (${p.tempF.toFixed(1)}°F)`, p.step.alarm === false ? "info" : "alert", p);
+      case "hop":          return this.event(type, `Addition — ${p.name}`, "alert", p);
+      case "step-complete":return this.event(type, `Step complete — ${p.step.name}`, p.manual ? "info" : "alert", p);
+      case "step-awaiting":return this.event(type, `${p.step.name} done — confirm to continue`, "alert", p);
       case "brew-complete":return this.event(type, `Brew complete — ${p.recipe}`, "alert", p);
-      case "brew-held":    return this.event(type, "Brew held", "info", p);
+      case "brew-held":    return this.event(type, "Brew paused", "info", p);
+      case "brew-resumed": return this.event(type, `Resumed — ${p.step.name}`, "info", p);
+      case "step-restarted":return this.event(type, `Step restarted — ${p.step.name}`, "info", p);
     }
   }
 

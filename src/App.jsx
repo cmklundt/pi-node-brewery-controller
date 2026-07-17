@@ -9,8 +9,10 @@ import { useBrewery } from "./api.js";
 import { Tap } from "./ui.jsx";
 import BrewTab from "./tabs/BrewTab.jsx";
 import FermentTab from "./tabs/FermentTab.jsx";
+import RecipeTab from "./tabs/RecipeTab.jsx";
+import HardwareTab from "./tabs/HardwareTab.jsx";
 import ReportsTab from "./tabs/ReportsTab.jsx";
-import SetupTab from "./tabs/SetupTab.jsx";
+import SystemTab from "./tabs/SystemTab.jsx";
 
 export default function App() {
   const { state, config, setConfig, events, connected } = useBrewery();
@@ -44,8 +46,8 @@ export default function App() {
           {state.driver === "sim" && <span style={{ ...legend, fontSize: 10, color: C.glycol, border: `1px solid ${C.glycol}`, borderRadius: 3, padding: "3px 7px" }}>SIM</span>}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {[["brew", "Brew"], ["ferment", "Ferment"], ["reports", "Reports"], ["setup", "Setup"]].map(([k, l]) => (
-            <Tap key={k} on={tab === k} onClick={() => setTab(k)} color={C.amber} pad="10px 18px">{l}</Tap>
+          {[["brew", "Brew"], ["ferment", "Ferment"], ["recipe", "Recipe"], ["hardware", "Hardware"], ["reports", "Reports"], ["system", "System"]].map(([k, l]) => (
+            <Tap key={k} on={tab === k} onClick={() => setTab(k)} color={C.amber} pad="10px 16px">{l}</Tap>
           ))}
         </div>
       </div>
@@ -68,8 +70,10 @@ export default function App() {
       <div style={{ padding: 16, maxWidth: 1240, margin: "0 auto" }}>
         {tab === "brew" && <BrewTab state={state} config={config} />}
         {tab === "ferment" && <FermentTab state={state} config={config} />}
+        {tab === "recipe" && <RecipeTab state={state} config={config} setConfig={setConfig} />}
+        {tab === "hardware" && <HardwareTab state={state} config={config} setConfig={setConfig} />}
         {tab === "reports" && <ReportsTab config={config} />}
-        {tab === "setup" && <SetupTab state={state} config={config} setConfig={setConfig} />}
+        {tab === "system" && <SystemTab state={state} config={config} />}
 
         <div style={{ fontSize: 11, color: C.faint, marginTop: 14, lineHeight: 1.6 }}>
           {state.driver === "sim"

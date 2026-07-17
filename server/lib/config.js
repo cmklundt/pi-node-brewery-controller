@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as HW from "../../src/hardware.js";
+import { creamsicleIPA } from "./recipes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DATA_DIR = process.env.BREWERY_DATA || path.join(__dirname, "../../data");
@@ -98,18 +99,7 @@ export function defaultConfig() {
       buzzer: true,
     },
 
-    recipe: {
-      name: "Default",
-      steps: [
-        { id: 1, name: "Heat strike water", vessel: "hlt",  target: 168, mins: 0,  kind: "ramp" },
-        { id: 2, name: "Mash in",           vessel: "mash", target: 152, mins: 0,  kind: "ramp" },
-        { id: 3, name: "Saccharification",  vessel: "mash", target: 152, mins: 60, kind: "rest" },
-        { id: 4, name: "Mash out",          vessel: "mash", target: 168, mins: 10, kind: "rest" },
-        { id: 5, name: "Boil",              vessel: "boil", target: 212, mins: 60, kind: "boil",
-          hops: [{ at: 60, name: "Magnum 1 oz" }, { at: 15, name: "Cascade 1 oz" },
-                 { at: 5, name: "Citra 2 oz" }, { at: 0, name: "Flameout 2 oz" }] },
-      ],
-    },
+    recipe: creamsicleIPA(),
   };
 }
 

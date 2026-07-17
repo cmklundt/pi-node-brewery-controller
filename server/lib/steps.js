@@ -1,24 +1,34 @@
 /**
  * steps.js — the brew-day step engine, server-side.
  *
- * Ported from the App.jsx prototype so the behavior Christopher tuned on
- * mobile is preserved: a step only counts down once its vessel is at
- * temperature ("timer gate"), ramp steps auto-advance on arrival, boil
- * steps fire hop alarms at their scheduled minutes-remaining.
+ * v2: a brew day is a phased checklist (modeled on the Brew Steps tab of
+ * the brew spreadsheet) mixing:
+ *   - manual steps: the operator does something and confirms; an optional
+ *     countdown runs once the step starts (no temp gate). A manual step
+ *     may still carry vessel+target — the engine HOLDS that temperature
+ *     while the operator works (e.g. holding mash temp while doughing in).
+ *   - controlled steps (ramp/rest/boil): temp-gated as before — a rest's
+ *     timer only counts while the vessel is at temperature; ramps complete
+ *     on arrival; boil steps fire hop alarms at minutes-remaining.
  *
- * Emits (via the callback bus): step-start, at-temp, hop, step-complete,
- * brew-complete, brew-started, brew-held.
+ * Per-step autoAdvance: true → flow straight into the next step;
+ * false → hold in "awaiting confirm" with an alert until the operator
+ * taps Continue. Pause freezes the timer; Restart resets the step.
+ *
+ * Emits: brew-started, step-start, at-temp, hop, step-complete,
+ * step-awaiting, brew-complete, brew-held, brew-resumed, step-restarted.
  */
 export class StepEngine {
   constructor(emit) {
-    this.emit = emit;         // (type, payload) => void
+    this.emit = emit;
     this.steps = [];
     this.active = 0;
     this.running = false;
-    this.left = 0;            // seconds remaining in the active step
+    this.awaiting = false;     // step done, autoAdvance=false, waiting on operator
+    this.left = 0;
     this.atTemp = false;
     this.firedHops = new Set();
-    this.session = null;      // { startedAt, recipeName } while a brew is live
+    this.session = null;
   }
 
   loadRecipe(recipe) {
@@ -32,6 +42,7 @@ export class StepEngine {
     this.active = i;
     this.left = (this.steps[i].mins || 0) * 60;
     this.atTemp = false;
+    this.awaiting = false;
   }
 
   get step() { return this.steps[this.active]; }
@@ -42,34 +53,69 @@ export class StepEngine {
       this.firedHops.clear();
       this.emit("brew-started", { recipe: this.recipeName });
     }
+    if (this.awaiting) return this.next();          // "continue" after a confirm-hold
+    const resuming = !this.running && this.left > 0 && this.left < (this.step?.mins || 0) * 60;
     this.running = true;
-    this.emit("step-start", { index: this.active, step: this.step });
+    this.emit(resuming ? "brew-resumed" : "step-start", { index: this.active, step: this.step });
   }
 
-  hold() { this.running = false; this.emit("brew-held", { index: this.active }); }
+  pause() {
+    this.running = false;
+    this.emit("brew-held", { index: this.active, step: this.step });
+  }
 
-  next() { this.#advance(true); }
+  /** reset the active step: full timer, temp gate re-armed, its hop alarms cleared */
+  restart() {
+    const s = this.step;
+    if (!s) return;
+    this.left = (s.mins || 0) * 60;
+    this.atTemp = false;
+    this.awaiting = false;
+    for (const k of [...this.firedHops]) if (k.startsWith(`${s.id}-`)) this.firedHops.delete(k);
+    this.emit("step-restarted", { index: this.active, step: s });
+  }
+
+  /** operator confirm: completes a manual step / clears an awaiting hold / skips */
+  next() {
+    if (this.awaiting) {
+      this.awaiting = false;
+      this.#goto(this.active + 1);
+      return;
+    }
+    this.emit("step-complete", { index: this.active, step: this.step, manual: true });
+    this.#goto(this.active + 1);
+  }
+
+  setAutoAdvance(index, auto) {
+    const s = this.steps[index];
+    if (s) s.autoAdvance = !!auto;
+  }
 
   endSession() {
     const s = this.session;
     this.session = null;
     this.running = false;
+    this.awaiting = false;
     return s;
   }
 
-  /** Called once per second with the sensed temp of the active step's
-   *  vessel. dt = simulated seconds per real second (1 on hardware, the
-   *  time multiplier in sim — so rests and boils accelerate with temps). */
+  /** once per engine second. sensedF = temp of the step's vessel (or null);
+   *  dt = simulated seconds per real second. */
   tick(sensedF, dt = 1) {
     const step = this.step;
-    if (!step || !this.running || sensedF == null) return;
+    if (!step || !this.running || this.awaiting) return;
 
-    const reached = sensedF >= step.target - 0.6;
-    if (reached && !this.atTemp) this.emit("at-temp", { index: this.active, step, tempF: sensedF });
-    this.atTemp = reached;
-    if (!reached) return;
-
-    if (step.kind === "ramp") return this.#advance();
+    const controlled = step.kind !== "manual";
+    if (controlled) {
+      if (sensedF == null) return;
+      const reached = sensedF >= step.target - 0.6;
+      if (reached && !this.atTemp) this.emit("at-temp", { index: this.active, step, tempF: sensedF });
+      this.atTemp = reached;
+      if (!reached) return;
+      if (step.kind === "ramp") return this.#complete();
+    }
+    // manual with no timer: nothing counts down — waits for operator Done
+    if (!step.mins) { if (controlled) this.#complete(); return; }
 
     this.left = Math.max(0, this.left - dt);
     if (step.hops) {
@@ -81,18 +127,28 @@ export class StepEngine {
         }
       }
     }
-    if (this.left <= 0) this.#advance();
+    if (this.left <= 0) this.#complete();
   }
 
-  #advance(manual = false) {
-    const done = this.steps[this.active];
-    if (!manual) this.emit("step-complete", { index: this.active, step: done });
-    if (this.active + 1 >= this.steps.length) {
+  #complete() {
+    this.emit("step-complete", { index: this.active, step: this.step });
+    if (this.step.autoAdvance === false) {
+      this.awaiting = true;
+      this.running = false;
+      this.emit("step-awaiting", { index: this.active, step: this.step });
+      return;
+    }
+    this.#goto(this.active + 1);
+  }
+
+  #goto(n) {
+    if (n >= this.steps.length) {
       this.running = false;
       this.emit("brew-complete", { recipe: this.recipeName });
       return;
     }
-    this.select(this.active + 1);
+    this.select(n);
+    this.running = true;
     this.emit("step-start", { index: this.active, step: this.step });
   }
 
@@ -102,6 +158,7 @@ export class StepEngine {
       steps: this.steps,
       active: this.active,
       running: this.running,
+      awaiting: this.awaiting,
       left: this.left,
       atTemp: this.atTemp,
       firedHops: [...this.firedHops],

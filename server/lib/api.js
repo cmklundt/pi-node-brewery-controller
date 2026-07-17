@@ -45,19 +45,23 @@ export function buildApp({ engine, alerts, push, history, getConfig, setConfig }
 
   // ── brew control ──
   app.post("/api/brew/start", guard(() => engine.steps.start()));
-  app.post("/api/brew/hold", guard(() => engine.steps.hold()));
+  app.post("/api/brew/pause", guard(() => engine.steps.pause()));
+  app.post("/api/brew/hold", guard(() => engine.steps.pause()));   // legacy alias
+  app.post("/api/brew/restart", guard(() => engine.steps.restart()));
   app.post("/api/brew/next", guard(() => engine.steps.next()));
+  app.post("/api/brew/auto", guard((req) => engine.steps.setAutoAdvance(+req.body.index, !!req.body.auto)));
   app.post("/api/brew/select", guard((req) => engine.steps.select(+req.body.index)));
   app.post("/api/brew/end", guard(() => {
     const s = engine.steps.endSession();
     if (s) history.endSession({ endedBy: "user" });
     alerts.event("brew-ended", "Session ended", "info");
   }));
-  app.put("/api/recipe", guard((req) => {
+  app.put("/api/recipe", guard(async (req) => {
+    const { normalizeRecipe } = await import("./recipes.js");
     const cfg = getConfig();
-    cfg.recipe = req.body;
+    cfg.recipe = normalizeRecipe(req.body);
     setConfig(saveConfig(cfg));
-    engine.steps.loadRecipe(cfg.recipe);
+    if (!engine.steps.session) engine.steps.loadRecipe(cfg.recipe); // don't yank a live brew
   }));
   app.post("/api/steps/update", guard((req) => {
     const { index, patch } = req.body;

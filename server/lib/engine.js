@@ -118,7 +118,8 @@ export class Engine extends EventEmitter {
       const enabled = c.type === "hysteresis" ? c.enabled !== false : brewCtrl?.id === c.id;
       const meta = { id: c.id, name: c.name, enabled, activeTarget: null, sensor: c.sensor };
 
-      if (c.type === "pid" && enabled && this.steps.running) {
+      const brewActive = this.steps.running || this.steps.awaiting; // hold temps during confirm-holds
+      if (c.type === "pid" && enabled && brewActive && this.steps.step?.target != null) {
         const target = this.steps.step.target;
         const t = this.readings[c.sensor]?.tempF;
         meta.activeTarget = target;
@@ -135,7 +136,7 @@ export class Engine extends EventEmitter {
         }
       }
 
-      if (c.type === "power" && enabled && this.steps.running) {
+      if (c.type === "power" && enabled && (this.steps.running || this.steps.awaiting) && this.steps.step?.target != null) {
         const t = this.readings[c.sensor]?.tempF;
         meta.activeTarget = this.steps.step.target;
         targets[c.sensor] = this.steps.step.target;
