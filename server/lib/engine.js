@@ -133,7 +133,10 @@ export class Engine extends EventEmitter {
           // learned feedforward: duty that historically holds this temp
           const amb = this.config.ambientF ?? 62;
           const ff = (c.params.lossCoeff || 0) * Math.max(0, target - amb);
-          let duty = this.pids[c.id].update(target, t, 1, ff);
+          let duty = c.params.manualDuty != null
+            ? clamp(+c.params.manualDuty, 0, 100)   // operator override —
+            : this.pids[c.id].update(target, t, 1, ff);
+          // note: the HERMS overshoot cap below still applies in manual
           // HERMS guard: never let the HLT run away past mash target + cap
           const cap = c.constraints?.hltOvershootCapF;
           if (cap != null) {

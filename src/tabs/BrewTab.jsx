@@ -182,7 +182,8 @@ function StepRunner({ state, config }) {
       </div>
 
       {/* live duty cycle of whichever element this step drives (HERMS:
-          mash steps drive the HLT element) */}
+          mash steps drive the HLT element), with Auto/Manual override.
+          Boil steps keep their own richer panel below — no toggle here. */}
       {(() => {
         if (!step.vessel) return null;
         const ctrl = config.controllers.find((c) => c.vessel === step.vessel && c.type !== "hysteresis");
@@ -191,16 +192,32 @@ function StepRunner({ state, config }) {
         const actor = config.actors.find((a) => a.id === actorId);
         const duty = state.duties?.[actorId] ?? 0;
         const onNow = !!state.actorOn?.[actorId];
+        const isPid = ctrl.type === "pid";
+        const isManual = ctrl.params.manualDuty != null;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: "8px 11px", background: C.bezel, borderRadius: 3, border: `1px solid ${duty > 0 ? C.ember + "66" : C.ruleSoft}` }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: onNow ? C.ember : C.dead, boxShadow: onNow ? `0 0 6px ${C.ember}` : "none" }} />
-            <span style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, whiteSpace: "nowrap" }}>
-              {(actor?.name || actorId).toUpperCase()} DUTY
-            </span>
-            <div style={{ flex: 1, height: 5, background: C.dead, borderRadius: 2 }}>
-              <div style={{ height: "100%", width: `${duty}%`, background: C.ember, borderRadius: 2, transition: "width .4s" }} />
+          <div style={{ marginTop: 12, padding: "8px 11px", background: C.bezel, borderRadius: 3, border: `1px solid ${isManual ? C.amber : duty > 0 ? C.ember + "66" : C.ruleSoft}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: onNow ? C.ember : C.dead, boxShadow: onNow ? `0 0 6px ${C.ember}` : "none" }} />
+              <span style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, whiteSpace: "nowrap" }}>
+                {(actor?.name || actorId).toUpperCase()} DUTY
+              </span>
+              <div style={{ flex: 1, height: 5, background: C.dead, borderRadius: 2 }}>
+                <div style={{ height: "100%", width: `${duty}%`, background: isManual ? C.amber : C.ember, borderRadius: 2, transition: "width .4s" }} />
+              </div>
+              <span style={{ ...mono, fontSize: 14, color: duty > 0 ? (isManual ? C.amber : C.ember) : C.faint, width: 42, textAlign: "right" }}>{duty}%</span>
+              {isPid && <>
+                <Tap on={!isManual} color={C.dim} pad="7px 11px" size={10}
+                  onClick={() => post(`/api/controllers/${ctrl.id}`, { manualDuty: null })}>auto</Tap>
+                <Tap on={isManual} color={C.amber} pad="7px 11px" size={10}
+                  onClick={() => post(`/api/controllers/${ctrl.id}`, { manualDuty: duty })}>manual</Tap>
+              </>}
             </div>
-            <span style={{ ...mono, fontSize: 14, color: duty > 0 ? C.ember : C.faint, width: 42, textAlign: "right" }}>{duty}%</span>
+            {isPid && isManual && (
+              <div style={{ marginTop: 8 }}>
+                <Stepper label="Manual duty — PID off; HERMS overshoot cap and interlock still apply" v={ctrl.params.manualDuty} unit="%" step={5} c={C.amber}
+                  set={(v) => post(`/api/controllers/${ctrl.id}`, { manualDuty: clamp(v, 0, 100) })} />
+              </div>
+            )}
           </div>
         );
       })()}
