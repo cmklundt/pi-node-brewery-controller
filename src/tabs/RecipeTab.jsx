@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { C, legend, mono } from "../theme.js";
 import { Panel, Row, Tap, Note, Field, Big, Computed } from "../ui.jsx";
 import { put } from "../api.js";
-import { computeRecipe, computeColor, computeWater, fmtSG } from "../brewcalc.js";
+import { computeRecipe, computeColor, computeWater, computeStrike, fmtSG } from "../brewcalc.js";
 import { GRAIN_DB, SALT_NAMES, IONS } from "../grainDB.js";
 import { HOP_DB } from "../hopDB.js";
 
@@ -56,6 +56,7 @@ export default function RecipeTab({ config, setConfig, state }) {
   const calc = computeRecipe(r);   // the spreadsheet's formulas, live
   const color = computeColor(r);
   const water = computeWater(r);
+  const strike = computeStrike(r);
 
   return (<>
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
@@ -98,6 +99,8 @@ export default function RecipeTab({ config, setConfig, state }) {
             </div>
             <SummaryStat label="Grain" v={calc.totalLbs.toFixed(1) + " lb"} />
             <SummaryStat label="Cl : SO₄" v={water.clSo4 != null ? water.clSo4.toFixed(2) : "—"} />
+            <SummaryStat label="Strike temp" v={strike.strikeF != null ? strike.strikeF.toFixed(1) + "°F" : "—"}
+              target={strike.ratio ? `${strike.ratio.toFixed(2)} qt/lb → ${strike.target}°F mash` : null} />
           </div>
         </Panel>
       </div>
@@ -214,11 +217,20 @@ export default function RecipeTab({ config, setConfig, state }) {
           {draft ? <>
             <Field label="Mash water (gal)" type="number" value={r.water?.mashGal} onChange={(v) => set({ water: { ...r.water, mashGal: v } })} />
             <Field label="Sparge water (gal)" type="number" value={r.water?.spargeGal} onChange={(v) => set({ water: { ...r.water, spargeGal: v } })} />
+            <Field label="Grain temp (°F)" type="number" value={r.water?.grainTempF} onChange={(v) => set({ water: { ...r.water, grainTempF: v } })} />
+            <Field label="Tun/transfer loss (°F)" type="number" value={r.water?.tunLossF} onChange={(v) => set({ water: { ...r.water, tunLossF: v } })} />
           </> : <>
             <Stat label="Mash water" v={`${r.water?.mashGal ?? "—"} gal`} />
             <Stat label="Sparge water" v={`${r.water?.spargeGal ?? "—"} gal`} />
+            <Stat label="Grain temp" v={`${r.water?.grainTempF ?? 68}°F`} />
+            <Stat label="Tun loss" v={`${r.water?.tunLossF ?? 2}°F`} />
           </>}
         </div>
+        {strike.strikeF != null && (
+          <div style={{ ...mono, fontSize: 11.5, color: C.glycol, marginTop: 8, padding: "8px 10px", background: C.bezel, borderRadius: 3, borderLeft: `3px solid ${C.glycol}88` }}>
+            ƒ Strike: heat {r.water?.mashGal} gal to <b>{strike.strikeF.toFixed(1)}°F</b> ({strike.ratio.toFixed(2)} qt/lb, {strike.grainLbs.toFixed(1)} lb grain at {strike.grainT}°F, +{strike.lossF}°F tun loss) → mash lands at {strike.target}°F. Set your strike-water step target to this.
+          </div>
+        )}
 
         {["mash", "boil"].map((stage) => (
           <div key={stage} style={{ marginTop: 10 }}>

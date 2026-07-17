@@ -94,6 +94,7 @@ export function creamsicleIPA() {
       source: { Ca: 12, Mg: 2.4, Na: 24, Cl: 30, SO4: 8 },
       targets: { Ca: 100, Mg: 18, Na: 24, Cl: 200, SO4: 100 },
       mashGal: 3.7, spargeGal: 4.39,
+      grainTempF: 68, tunLossF: 2,   // strike temp calculator inputs
       mashPh: "5.2–5.4", spargePh: "5.6–5.8",
     },
     yeast: { strain: "Wyeast 1318 London Ale III", attenuationPct: 73, pitchF: 68, fermF: 68, raiseToF: 71 },

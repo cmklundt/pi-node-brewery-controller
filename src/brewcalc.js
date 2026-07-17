@@ -69,6 +69,25 @@ const SRM_HEX = ["#FFE699", "#FFD878", "#FFCA5A", "#FFBF42", "#FBB123", "#F8A600
   "#5A0A02", "#560A05", "#520907", "#4C0505", "#470606", "#440607", "#3F0708", "#3B0607", "#36080A", "#23030A"];
 export const srmHex = (srm) => SRM_HEX[Math.max(0, Math.min(39, Math.round(srm) - 1))] || SRM_HEX[39];
 
+/* ── strike water temperature ───────────────────────────────────
+ * Standard infusion formula: strike = target + (0.2/R)(target − grainT)
+ * where R = qts water per lb grain, plus a tun/transfer loss allowance.
+ * (0.2 is the grain:water specific-heat ratio constant.) */
+export function computeStrike(r) {
+  const grainLbs = (r?.grains || []).reduce((a, g) => a + (+g.lbs || 0), 0);
+  const mashGal = +r?.water?.mashGal || 0;
+  const grainT = +r?.water?.grainTempF || 68;
+  const lossF = +r?.water?.tunLossF ?? 2;
+  // mash target = first rest step's target, else first mash-vessel target
+  const steps = r?.steps || [];
+  const rest = steps.find((s) => s.kind === "rest" && s.phase === "mash" && s.target);
+  const target = rest?.target ?? steps.find((s) => s.phase === "mash" && s.target)?.target ?? 152;
+  if (!grainLbs || !mashGal) return { target, ratio: null, strikeF: null };
+  const R = (mashGal * 4) / grainLbs; // qts per lb
+  const strikeF = target + (0.2 / R) * (target - grainT) + lossF;
+  return { target, ratio: R, strikeF, grainLbs, grainT, lossF };
+}
+
 /* ── water / salts (EZ Water model) ─────────────────────────── */
 import { SALT_DB, IONS } from "./grainDB.js";
 
