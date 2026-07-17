@@ -78,6 +78,10 @@ export function buildApp({ engine, alerts, push, history, getConfig, setConfig }
     engine.setLevel(req.params.id, req.body.gal);
     saveConfig(getConfig()); // levels survive a reboot
   }));
+  app.post("/api/flows/route", guard((req) => {
+    engine.setRoute(req.body.pump, req.body.flowId);
+    saveConfig(getConfig()); // hose position survives a reboot
+  }));
   app.post("/api/controllers/:id", guard((req) => {
     engine.setControllerParams(req.params.id, req.body);
     saveConfig(getConfig()); // ferment target etc. survive a reboot

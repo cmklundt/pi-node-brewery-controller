@@ -67,15 +67,20 @@ export default function Herms({ config, state, onSelectVessel }) {
               onTap={() => onSelectVessel?.(v.id)} />
         )}
 
-        {flows.map((f, i) => (
-          <FlowPath key={f.id} flow={f} rail={RAIL0 + i * RAIL_GAP} vessels={vessels} slot={slot}
-            running={on(f.pump)} pumpActor={config.actors.find((a) => a.id === f.pump)}
-            onTogglePump={() => {
-              const a = config.actors.find((x) => x.id === f.pump);
-              if (!a) return;
-              post(`/api/actors/${f.pump}`, { mode: on(f.pump) ? (a.control === "manual" ? "off" : "auto") : "on" }).catch(() => {});
-            }} />
-        ))}
+        {flows.map((f, i) => {
+          const routed = (state.routes?.[f.pump] ?? flows.find((x) => x.pump === f.pump)?.id) === f.id;
+          return (
+            <FlowPath key={f.id} flow={f} rail={RAIL0 + i * RAIL_GAP} vessels={vessels} slot={slot}
+              routed={routed} running={routed && on(f.pump)}
+              pumpActor={config.actors.find((a) => a.id === f.pump)}
+              onRoute={() => post("/api/flows/route", { pump: f.pump, flowId: f.id }).catch(() => {})}
+              onTogglePump={() => {
+                const a = config.actors.find((x) => x.id === f.pump);
+                if (!a) return;
+                post(`/api/actors/${f.pump}`, { mode: on(f.pump) ? (a.control === "manual" ? "off" : "auto") : "on" }).catch(() => {});
+              }} />
+          );
+        })}
         <style>{`@keyframes hspin { to { transform: rotate(360deg); } }`}</style>
       </svg>
     </div>
@@ -218,7 +223,7 @@ function Conical({ x, v, tempR, targetF, levelGal, glycolOn, heatOn, onTap }) {
  * One flow path: from-vessel bottom → rail → pump → destination.
  * via="X" routes through vessel X (the HERMS coil) then up to `to`'s top.
  */
-function FlowPath({ flow, rail, vessels, slot, running, pumpActor, onTogglePump }) {
+function FlowPath({ flow, rail, vessels, slot, routed, running, pumpActor, onRoute, onTogglePump }) {
   const fi = slot(flow.from), ti = slot(flow.to), vi = flow.via ? slot(flow.via) : -1;
   if (fi < 0 || ti < 0) return null;
   const geom = (i) => {
@@ -228,18 +233,23 @@ function FlowPath({ flow, rail, vessels, slot, running, pumpActor, onTogglePump 
       : { ...kettleGeom(v, i * VW + 26) };
   };
   const F = geom(fi), T = geom(ti), V = vi >= 0 ? geom(vi) : null;
+  const selfLoop = fi === ti && !V;
   // overhead return line clears every vessel's label
   const skyline = Math.min(...vessels.map((v, i) => geom(i).top)) - 26;
 
   const col = running ? (flow.kind === "water" ? C.glycol : C.live) : "#3A4757";
-  const pipe = { fill: "none", stroke: col, strokeWidth: 3.5 };
-  const dash = running ? { strokeDasharray: "8 6", style: { animation: "flow 0.9s linear infinite" } } : { strokeDasharray: "8 6", strokeOpacity: 0.5 };
-  const pumpX = V ? (F.cx + V.cx) / 2 : (F.cx + T.cx) / 2;
+  const pipe = { fill: "none", stroke: col, strokeWidth: 3.5, strokeOpacity: routed ? 1 : 0.22 };
+  const dash = running ? { strokeDasharray: "8 6", style: { animation: "flow 0.9s linear infinite" } } : { strokeDasharray: "8 6", strokeOpacity: routed ? 0.5 : 0.22 };
+  const pumpX = selfLoop ? F.cx + 44 : V ? (F.cx + V.cx) / 2 : (F.cx + T.cx) / 2;
 
   const seg = [];
   // out of `from`'s bottom drain, down to the rail, into the pump
   seg.push(`M ${F.cx - 20} ${FLOOR} V ${rail} H ${pumpX - 13}`);
-  if (V) {
+  if (selfLoop) {
+    // pump → up the right side → back in over the rim (circulation loop)
+    const side = F.x + F.W + 26;
+    seg.push(`M ${pumpX + 13} ${rail} H ${side} V ${F.top - 14} H ${F.cx + 24} V ${F.top - 4}`);
+  } else if (V) {
     // pump → via (HERMS coil) bottom; coil out the top → overhead → down into `to`
     seg.push(`M ${pumpX + 13} ${rail} H ${V.cx + 20} V ${FLOOR}`);
     seg.push(`M ${V.cx} ${V.top - 4} V ${skyline} H ${T.cx + 26} V ${T.top - 4}`);
@@ -252,19 +262,25 @@ function FlowPath({ flow, rail, vessels, slot, running, pumpActor, onTogglePump 
   return (
     <g>
       {seg.map((d, i) => <path key={i} d={d} {...pipe} {...dash} />)}
-      {/* pump (tap to toggle — manual outlets mirror the wall switch).
-          The arrow points in the direction of flow; no spinning. */}
-      <g onClick={onTogglePump} style={{ cursor: "pointer" }}>
-        <circle cx={pumpX} cy={rail} r="14" fill={C.bezel} stroke={running ? C.live : C.rule} strokeWidth="2" />
+      {/* pump — one physical pump can appear on several paths; only the
+          routed path (where the hose actually is) gets the solid pump.
+          Tap a dim path to say "I moved the hose here"; tap the routed
+          pump to toggle it. Arrow points in the direction of flow. */}
+      <g onClick={routed ? onTogglePump : onRoute} style={{ cursor: "pointer" }}>
+        <circle cx={pumpX} cy={rail} r="14" fill={routed ? C.bezel : "transparent"}
+          stroke={running ? C.live : routed ? C.rule : C.ruleSoft} strokeWidth="2"
+          strokeDasharray={routed ? "none" : "4 4"} />
         {(() => {
-          const dir = (V ? V.cx : T.cx) >= F.cx ? 1 : -1; // toward destination
-          const fill = running ? C.live : C.faint;
+          const dir = selfLoop ? 1 : (V ? V.cx : T.cx) >= F.cx ? 1 : -1; // toward destination
+          const fill = running ? C.live : routed ? C.faint : "#3A4757";
           return <path d={`M ${pumpX - 6 * dir} ${rail - 7} L ${pumpX + 8 * dir} ${rail} L ${pumpX - 6 * dir} ${rail + 7} Z`}
             fill={fill} style={running ? { filter: `drop-shadow(0 0 4px ${C.live})` } : undefined} />;
         })()}
         <text x={pumpX + 22} y={rail + 4} fill={running ? C.live : C.faint} fontSize="10" style={legend}
-          stroke={C.card} strokeWidth="3" paintOrder="stroke">
-          {(pumpActor?.name || flow.name).toUpperCase()} {running ? "ON" : "OFF"}{pumpActor?.control === "manual" ? " · MANUAL" : ""}
+          stroke={C.card} strokeWidth="3" paintOrder="stroke" opacity={routed ? 1 : 0.55}>
+          {routed
+            ? `${(pumpActor?.name || flow.name).toUpperCase()} ${running ? "ON" : "OFF"} · ${flow.name.toUpperCase()}`
+            : `${flow.name.toUpperCase()} — TAP TO CONNECT HOSE`}
         </text>
       </g>
     </g>

@@ -234,15 +234,26 @@ export class Engine extends EventEmitter {
       } else if (this._senseMismatch) delete this._senseMismatch[a.id];
     }
 
-    // 6c — sim only: open transfer flows (from ≠ to, no coil loop) move
-    // volume and heat while their pump runs — levels drain/fill and the
-    // destination takes a mass-weighted mix (minus hose loss). On real
-    // hardware levels stay operator-set until flow sensors land.
+    // 6c — hose routing: exactly one flow per pump is "connected" (the
+    // operator taps the diagram when they move the hose). A flow is ACTIVE
+    // when it's routed and its pump is running.
+    this.config.routes ??= {};
+    const routedFlow = (pump) => this.config.routes[pump]
+      ?? (this.config.flows || []).find((f) => f.pump === pump)?.id;
+    this.activeFlows = (this.config.flows || [])
+      .filter((f) => routedFlow(f.pump) === f.id && this.actorOn[f.pump])
+      .map((f) => f.id);
+    this.driver.activeFlows = new Set(this.activeFlows); // sim coil keys off this
+
+    // sim only: ACTIVE open transfers (from ≠ to, no coil loop) move
+    // volume and heat — levels drain/fill and the destination takes a
+    // mass-weighted mix (minus hose loss). On real hardware levels stay
+    // operator-set until flow sensors land.
     if (this.driver.name === "sim") {
       const dt = this.driver.speed || 1;
       for (const f of this.config.flows || []) {
         if (!f.from || !f.to || f.from === f.to || f.via) continue;
-        if (!this.actorOn[f.pump]) continue;
+        if (!this.activeFlows.includes(f.id)) continue;
         const dst = this.config.vessels.find((v) => v.id === f.to);
         if (!dst) continue;
         const room = (dst.volumeGal ?? 99) - (this.levels[f.to] || 0);
@@ -310,6 +321,15 @@ export class Engine extends EventEmitter {
     this.alerts.event("manual", `${a.name} → ${mode}`, "info");
   }
 
+  /** move a pump's hose to a different path */
+  setRoute(pump, flowId) {
+    const f = (this.config.flows || []).find((x) => x.id === flowId);
+    if (!f || f.pump !== pump) throw new Error("no such path for that pump");
+    this.config.routes ??= {};
+    this.config.routes[pump] = flowId;
+    this.alerts.event("route", `${pump} hose → ${f.name}`, "info");
+  }
+
   setLevel(vesselId, gal) {
     const v = this.config.vessels.find((x) => x.id === vesselId);
     if (!v) throw new Error("unknown vessel");
@@ -344,6 +364,8 @@ export class Engine extends EventEmitter {
       timers: this.alerts.timerSnapshot(),
       levels: this.levels,
       inputs: this.inputStates || {},
+      activeFlows: this.activeFlows || [],
+      routes: this.config.routes || {},
       boilingPointF: boilingPointF(this.config.altitudeFt),
       simSpeed: this.driver.speed,
       paused: this.paused,

@@ -39,8 +39,8 @@ export function defaultConfig() {
        * chill animations follow the declared state. The shield's flow
        * inputs (GPIO 12/13) can later confirm a pump is actually moving
        * liquid; see docs. */
-      { id: "recircPump", name: "Recirc pump", control: "manual", gpio: null,
-        kind: "outlet", volts: 120, role: "pump" },
+      /* Two physical pumps (like the rig): which PATH each one feeds is a
+       * hose/port choice, modeled as flow routing below. */
       { id: "waterPump", name: "Water pump", control: "manual", gpio: null,
         kind: "outlet", volts: 120, role: "pump" },
       { id: "wortPump", name: "Wort pump", control: "manual", gpio: null,
@@ -71,13 +71,18 @@ export function defaultConfig() {
     /* Flow paths: which pump moves liquid where. Drawn as piping on the
      * rig diagram; the path animates while its pump runs (GPIO or manual
      * soft-switch). via:"coil" routes through the HERMS coil vessel. */
+    /* One pump, several possible hose positions — each flow is one
+     * position. routes[] says where each pump's hose is RIGHT NOW (tap a
+     * path on the diagram to move it). Open transfers (from ≠ to, no via)
+     * move volume + heat in the sim at rateGpm minus lossF in the hose. */
     flows: [
-      // open transfers (from ≠ to, no via) move volume + heat in the sim:
-      // rateGpm gal/min, lossF °F lost in the hose on the way over
+      { id: "hlt-loop", name: "HLT circulation", pump: "waterPump", from: "hlt", to: "hlt", via: null, kind: "water" },
       { id: "strike",   name: "HLT → Mash (strike/sparge)", pump: "waterPump", from: "hlt", to: "mash", via: null, kind: "water", rateGpm: 1.5, lossF: 1.5 },
-      { id: "recirc",   name: "Mash recirc (HERMS)", pump: "recircPump", from: "mash", to: "mash", via: "hlt", kind: "wort" },
-      { id: "transfer", name: "Boil → fermenter",    pump: "wortPump",   from: "boil", to: "ferm", via: null,  kind: "wort", rateGpm: 1.5, lossF: 3 },
+      { id: "recirc",   name: "Mash recirc (HERMS)", pump: "wortPump", from: "mash", to: "mash", via: "hlt", kind: "wort" },
+      { id: "sparge",   name: "Sparge runoff → Boil", pump: "wortPump", from: "mash", to: "boil", via: null, kind: "wort", rateGpm: 0.8, lossF: 2 },
+      { id: "transfer", name: "Boil → Fermenter", pump: "wortPump", from: "boil", to: "ferm", via: null, kind: "wort", rateGpm: 1.5, lossF: 3 },
     ],
+    routes: { waterPump: "hlt-loop", wortPump: "recirc" },
 
     controllers: [
       { id: "mash", name: "Mash (HERMS)", type: "pid", sensor: "mash", actor: "hltElement",
@@ -143,14 +148,16 @@ function migrate(cfg) {
   const stale = cfg.recipe?.name === "Creamsicle NE IPA" && (cfg.recipe.rev || 0) < SEED_REV;
   if (!cfg.recipe?.batch || !cfg.recipe?.grains?.length || stale) merged.recipe = creamsicleIPA();
   else merged.recipe = normalizeRecipe(cfg.recipe);
-  // older configs: add the strike-water transfer path + its pump
-  if (!merged.actors.some((a) => a.id === "waterPump")) {
-    merged.actors.push({ id: "waterPump", name: "Water pump", control: "manual", gpio: null, kind: "outlet", volts: 120, role: "pump" });
+  // older configs: migrate to the two-pump + hose-routing model
+  const d = defaultConfig();
+  merged.actors = merged.actors.filter((a) => a.id !== "recircPump");
+  for (const p of ["waterPump", "wortPump"]) {
+    if (!merged.actors.some((a) => a.id === p)) merged.actors.push(d.actors.find((a) => a.id === p));
   }
-  merged.flows ??= [];
-  if (!merged.flows.some((f) => f.id === "strike")) {
-    merged.flows.unshift({ id: "strike", name: "HLT → Mash (strike/sparge)", pump: "waterPump", from: "hlt", to: "mash", via: null, kind: "water", rateGpm: 1.5, lossF: 1.5 });
+  if (!merged.flows?.some((f) => f.id === "hlt-loop") || merged.flows.some((f) => f.pump === "recircPump")) {
+    merged.flows = d.flows;
   }
+  merged.routes ??= d.routes;
   return merged;
 }
 

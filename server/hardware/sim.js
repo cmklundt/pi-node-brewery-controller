@@ -50,9 +50,10 @@ export class SimDriver {
       nx.hlt += on("hltElement") * K.hltGain - (t.hlt - AMBIENT) * K.hltLoss;
       nx.boil += on("boilElement") * K.boilGain - (t.boil - AMBIENT) * K.boilLoss;
       if (nx.boil > this.bp + 0.4) nx.boil = this.bp + 0.4; // rolling boil ceiling (altitude-aware)
-      if (on("recircPump")) {
-        // HERMS recirc at ~5 gpm equalizes mash toward HLT within minutes;
-        // equal and opposite so the coil conserves energy between equal volumes
+      if (this.activeFlows?.has("recirc")) {
+        // HERMS recirc — only when the wort pump is running AND its hose is
+        // routed to the mash-recirc loop. Equal and opposite: the coil
+        // conserves energy between roughly equal volumes.
         const dT = t.hlt - t.mash;
         nx.mash += dT * K.coil;
         nx.hlt -= dT * K.coil;

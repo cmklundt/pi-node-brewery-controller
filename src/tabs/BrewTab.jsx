@@ -23,7 +23,7 @@ export default function BrewTab({ state, config }) {
 
   const st = state.steps;
   const step = st.steps[st.active];
-  const pumpOn = !!state.actorOn?.recircPump || state.manual?.recircPump === "on";
+  const pumpOn = (state.activeFlows || []).includes("recirc"); // wort pump running + hose on the HERMS loop
 
   return (<>
     <Herms config={config} state={state} onSelectVessel={(id) => setSelVessel(id === selVessel ? null : id)} />
