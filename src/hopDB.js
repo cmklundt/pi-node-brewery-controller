@@ -1,0 +1,65 @@
+/**
+ * hopDB.js — quick-select hop catalog. aa = typical alpha acid % (midpoint
+ * of the published range; your actual bag's AA% overrides it — always type
+ * in what the label says for accurate IBUs).
+ */
+export const HOP_DB = [
+  // American citrus/tropical
+  { name: "Citra", aa: 12.0, notes: "grapefruit, tropical" },
+  { name: "Mosaic", aa: 12.5, notes: "berry, mango, pine" },
+  { name: "Simcoe", aa: 13.0, notes: "pine, passionfruit" },
+  { name: "Amarillo", aa: 9.5, notes: "orange citrus" },
+  { name: "Cascade", aa: 7.0, notes: "grapefruit, floral" },
+  { name: "Centennial", aa: 10.5, notes: "citrus, pine" },
+  { name: "Chinook", aa: 13.0, notes: "pine, grapefruit, spice" },
+  { name: "Columbus (CTZ)", aa: 15.0, notes: "dank, pungent" },
+  { name: "Sabro", aa: 14.0, notes: "coconut, tangerine, cream" },
+  { name: "Idaho 7", aa: 13.0, notes: "apricot, tropical, resin" },
+  { name: "Strata", aa: 12.0, notes: "strawberry, passionfruit, dank" },
+  { name: "El Dorado", aa: 15.0, notes: "candy, stone fruit" },
+  { name: "Azacca", aa: 14.5, notes: "mango, papaya" },
+  { name: "Ekuanot", aa: 14.5, notes: "melon, lime, papaya" },
+  { name: "Cashmere", aa: 8.0, notes: "melon, lemon-lime" },
+  { name: "Talus", aa: 8.5, notes: "pink grapefruit, rose" },
+  { name: "Loral", aa: 11.0, notes: "floral, dark fruit, pepper" },
+  { name: "Comet", aa: 10.0, notes: "wild grapefruit" },
+  // high-alpha bittering
+  { name: "Magnum", aa: 13.0, notes: "clean bittering" },
+  { name: "Warrior", aa: 16.0, notes: "clean bittering" },
+  { name: "Nugget", aa: 13.0, notes: "herbal bittering" },
+  { name: "Apollo", aa: 17.0, notes: "high-alpha, resin" },
+  { name: "Bravo", aa: 15.5, notes: "fruity bittering" },
+  { name: "Summit", aa: 17.5, notes: "tangerine, dank" },
+  { name: "Galena", aa: 12.5, notes: "classic bittering" },
+  // Southern hemisphere
+  { name: "Galaxy", aa: 14.0, notes: "passionfruit, peach" },
+  { name: "Nelson Sauvin", aa: 12.5, notes: "white wine, gooseberry" },
+  { name: "Motueka", aa: 7.0, notes: "lime, lemongrass" },
+  { name: "Riwaka", aa: 5.5, notes: "grapefruit, tropical" },
+  { name: "Rakau", aa: 10.0, notes: "apricot, resin" },
+  { name: "Waimea", aa: 17.5, notes: "citrus, pine, bittering" },
+  { name: "Pacific Gem", aa: 15.0, notes: "blackberry, oak" },
+  { name: "Green Bullet", aa: 12.0, notes: "raisin, pine" },
+  // noble & continental
+  { name: "Saaz", aa: 3.5, notes: "noble — spicy, earthy" },
+  { name: "Hallertau Mittelfrüh", aa: 4.0, notes: "noble — floral, herbal" },
+  { name: "Tettnang", aa: 4.5, notes: "noble — spicy, floral" },
+  { name: "Spalt", aa: 4.5, notes: "noble — delicate, spicy" },
+  { name: "Hersbrucker", aa: 3.5, notes: "floral, fruity" },
+  { name: "Perle", aa: 8.0, notes: "minty, spicy" },
+  { name: "Northern Brewer", aa: 8.5, notes: "woody, minty" },
+  { name: "Sterling", aa: 6.5, notes: "saaz-like, citrus" },
+  { name: "Mt. Hood", aa: 5.5, notes: "hallertau-like" },
+  { name: "Liberty", aa: 4.0, notes: "noble-like, subtle" },
+  { name: "Crystal", aa: 4.5, notes: "woody, floral" },
+  // English
+  { name: "East Kent Goldings", aa: 5.0, notes: "earthy, honey" },
+  { name: "Fuggle", aa: 4.5, notes: "earthy, woody" },
+  { name: "Willamette", aa: 5.0, notes: "earthy, blackcurrant" },
+  { name: "Challenger", aa: 7.5, notes: "cedar, green tea" },
+  { name: "Target", aa: 10.5, notes: "sage, spice, bittering" },
+  { name: "First Gold", aa: 7.5, notes: "orange, marmalade" },
+  { name: "Admiral", aa: 14.5, notes: "orange, bittering" },
+  { name: "Styrian Goldings", aa: 4.5, notes: "earthy, white pepper" },
+  { name: "Cluster", aa: 7.0, notes: "classic American, fruity" },
+];

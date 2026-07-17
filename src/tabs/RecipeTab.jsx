@@ -10,6 +10,7 @@ import { Panel, Row, Tap, Note, Field, Big, Computed } from "../ui.jsx";
 import { put } from "../api.js";
 import { computeRecipe, computeColor, computeWater, fmtSG } from "../brewcalc.js";
 import { GRAIN_DB, SALT_NAMES, IONS } from "../grainDB.js";
+import { HOP_DB } from "../hopDB.js";
 
 const PHASES = ["mash", "boil", "transfer"];
 const KINDS = ["manual", "ramp", "rest", "boil"];
@@ -165,6 +166,18 @@ export default function RecipeTab({ config, setConfig, state }) {
       {/* ── hops: oz/alpha/when are inputs, IBU is computed (Tinseth) ── */}
       <Panel title={`Hops & additions (${(r.hops || []).length})`} right={draft &&
         <Tap color={C.live} pad="8px 12px" size={11} onClick={() => addTo("hops", { name: "Hop", oz: 1, alphaPct: 10, when: "60 min" })}>+ Add</Tap>}>
+        {draft && (
+          <label style={{ display: "block", marginBottom: 10 }}>
+            <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 3 }}>Quick add from catalog (fills typical α% — override with your bag's label)</div>
+            <select value="" onChange={(e) => {
+              const h = HOP_DB.find((x) => x.name === e.target.value);
+              if (h) addTo("hops", { name: h.name, oz: 1, alphaPct: h.aa, when: "60 min" });
+            }} style={{ ...mono, width: "100%", fontSize: 13, padding: "10px", background: C.bezel, color: C.text, border: `1px solid ${C.rule}`, borderRadius: 3 }}>
+              <option value="">— pick a hop —</option>
+              {HOP_DB.map((h) => <option key={h.name} value={h.name}>{h.name}  (~{h.aa}% α · {h.notes})</option>)}
+            </select>
+          </label>
+        )}
         {(r.hops || []).map((h, i) => {
           const ch = calc.hops[i] || {};
           return draft ? (
