@@ -112,12 +112,27 @@ export function Note({ children }) {
   return <div style={{ fontSize: 11, color: C.faint, marginTop: 10, lineHeight: 1.5, paddingTop: 10, borderTop: `1px solid ${C.ruleSoft}` }}>{children}</div>;
 }
 
+/** Editable input — warm-tinted like the spreadsheet's yellow "you type here" cells. */
 export function Field({ label, value, onChange, width = "100%", type = "text" }) {
   return (
     <label style={{ display: "block", marginBottom: 8 }}>
-      <div style={{ ...legend, fontSize: 10, color: C.faint, marginBottom: 3 }}>{label}</div>
-      <input type={type} value={value ?? ""} onChange={(e) => onChange(type === "number" ? +e.target.value : e.target.value)}
-        style={{ ...mono, width, boxSizing: "border-box", fontSize: 14, padding: "10px 10px", background: C.bezel, color: C.text, border: `1px solid ${C.rule}`, borderRadius: 3 }} />
+      {label && <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 3 }}>{label}</div>}
+      <input type={type} value={value ?? ""} step="any" onChange={(e) => onChange(type === "number" ? +e.target.value : e.target.value)}
+        style={{ ...mono, width, boxSizing: "border-box", fontSize: 13, padding: "10px 7px", minWidth: 0,
+          background: "rgba(242,160,61,0.06)", color: C.text,
+          border: `1px solid ${C.rule}`, borderLeft: `3px solid ${C.amber}88`, borderRadius: 3 }} />
     </label>
+  );
+}
+
+/** Read-only computed value — the spreadsheet's formula cells. */
+export function Computed({ label, v, unit, good }) {
+  return (
+    <div style={{ background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderLeft: `3px solid ${C.glycol}88`, borderRadius: 3, padding: "8px 10px" }}>
+      <div style={{ ...legend, fontSize: 9.5, fontWeight: 600, color: C.dim }}>ƒ {label}</div>
+      <div style={{ ...mono, fontSize: 15, color: good === false ? C.ember : C.glycol, marginTop: 2 }}>
+        {v ?? "—"}{unit && <span style={{ fontSize: 10, color: C.faint }}> {unit}</span>}
+      </div>
+    </div>
   );
 }

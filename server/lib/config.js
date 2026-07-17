@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as HW from "../../src/hardware.js";
-import { creamsicleIPA } from "./recipes.js";
+import { creamsicleIPA, normalizeRecipe, SEED_REV } from "./recipes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DATA_DIR = process.env.BREWERY_DATA || path.join(__dirname, "../../data");
@@ -129,8 +129,14 @@ export function saveConfig(cfg) {
 }
 
 function migrate(cfg) {
-  // future schema upgrades go here, keyed off cfg.version
-  return { ...defaultConfig(), ...cfg };
+  const merged = { ...defaultConfig(), ...cfg };
+  // configs written before recipe v2 carry a bare "Default" recipe with no
+  // batch data — replace it with the full seeded sample rather than showing
+  // an empty brew sheet
+  const stale = cfg.recipe?.name === "Creamsicle NE IPA" && (cfg.recipe.rev || 0) < SEED_REV;
+  if (!cfg.recipe?.batch || !cfg.recipe?.grains?.length || stale) merged.recipe = creamsicleIPA();
+  else merged.recipe = normalizeRecipe(cfg.recipe);
+  return merged;
 }
 
 /** shallow structural validation for config PUTs from the UI */

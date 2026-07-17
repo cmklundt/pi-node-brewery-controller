@@ -2,7 +2,7 @@
 export const C = {
   panel: "#12161C", bezel: "#1B222B", card: "#212A35", raised: "#2A3542",
   rule: "#333F4D", ruleSoft: "#28323E",
-  text: "#E7ECF2", dim: "#8695A8", faint: "#5C6B7D",
+  text: "#E7ECF2", dim: "#93A2B5", faint: "#6C7C90",
   amber: "#F2A03D", ember: "#E2542C", glycol: "#4FB8D8", live: "#63D471", dead: "#2C3742",
 };
 
@@ -12,6 +12,8 @@ input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;ba
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#E7ECF2;margin-top:-12px;border:none}
 button{-webkit-tap-highlight-color:transparent}
 input,select{font:inherit}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
 @keyframes flow { to { stroke-dashoffset: -14; } }
 @keyframes pulse { 0%,100%{opacity:.55} 50%{opacity:1} }
 `;

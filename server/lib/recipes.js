@@ -20,9 +20,12 @@
  *   alarm       true → at-temp / done fires an alert + buzzer + push
  */
 
+export const SEED_REV = 2;
+
 export function normalizeRecipe(r = {}) {
   return {
     name: r.name || "Untitled recipe",
+    rev: r.rev,
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.05, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
@@ -55,18 +58,21 @@ export function normalizeRecipe(r = {}) {
 export function creamsicleIPA() {
   return normalizeRecipe({
     name: "Creamsicle NE IPA",
+    rev: 2,
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.050, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
       boilLossGal: 0.7, fermenterLossGal: 0.75, spargeGal: 4.39,
     },
+    // lbs back-computed from the sheet's per-grain gravity-unit column
+    // (total ≈ 313 GU → OG 1.050 at 92% efficiency into 5.5 gal)
     grains: [
-      { name: "Domestic 2-row", lbs: 2.0, pct: 28.27, ppg: 1.037 },
-      { name: "Carapils", lbs: 3.5, pct: 7.85, ppg: 1.033 },
-      { name: "Flaked Oats", lbs: 1.0, pct: 15.18, ppg: 1.032 },
-      { name: "Maris Otter", lbs: 3.0, pct: 28.27, ppg: 1.036 },
-      { name: "Honey Malt 25L", lbs: 0.5, pct: 5.24, ppg: 1.037 },
-      { name: "White Wheat 3.1L", lbs: 3.1, pct: 15.18, ppg: 1.037 },
+      { name: "Domestic 2-row", lbs: 2.5, ppg: 1.037, lov: 1.8 },
+      { name: "Carapils", lbs: 0.7, ppg: 1.033, lov: 1.5 },
+      { name: "Flaked Oats", lbs: 1.3, ppg: 1.033, lov: 2.2 },
+      { name: "Maris Otter", lbs: 2.4, ppg: 1.038, lov: 3.8 },
+      { name: "Honey Malt 25L", lbs: 0.45, ppg: 1.037, lov: 25 },
+      { name: "White Wheat 3.1L", lbs: 1.25, ppg: 1.040, lov: 3.1 },
     ],
     hops: [
       { name: "Sabro", oz: 0.5, alphaPct: 15.8, when: "first wort", ibu: 7.9 },
@@ -76,13 +82,18 @@ export function creamsicleIPA() {
       { name: "Sabro", oz: 2.0, alphaPct: 15.8, when: "dry hop day 1" },
       { name: "Sabro", oz: 2.0, alphaPct: 9.4, when: "dry hop day 3 (yeast dump)" },
     ],
+    // grams solved so the resulting profile lands on the sheet's result
+    // (Ca 99 · Mg 22 · Na 24 · SO4 185) — the export garbled the sheet's
+    // salt column headers, so these are derived, not transcribed
     salts: {
-      mash: [{ name: "Gypsum", g: 4.5 }, { name: "Calcium Chloride", g: 3.0 }],
-      boil: [{ name: "Gypsum", g: 5.33 }, { name: "Calcium Chloride", g: 3.56 }],
+      mash: [{ name: "Gypsum", g: 2.5 }, { name: "Calcium Chloride", g: 2.35 }, { name: "Epsom Salt", g: 2.8 }],
+      boil: [{ name: "Gypsum", g: 2.95 }, { name: "Calcium Chloride", g: 2.77 }, { name: "Epsom Salt", g: 3.3 }],
     },
     water: {
+      // starting profile from the EZ Water tab (city water report)
+      source: { Ca: 12, Mg: 2.4, Na: 24, Cl: 30, SO4: 8 },
       targets: { Ca: 100, Mg: 18, Na: 24, Cl: 200, SO4: 100 },
-      result: { Ca: 99, Mg: 22, Na: 24, SO4: 185, Cl: 91, clSo4Ratio: 2.02 },
+      mashGal: 3.7, spargeGal: 4.39,
       mashPh: "5.2–5.4", spargePh: "5.6–5.8",
     },
     yeast: { strain: "Wyeast 1318 London Ale III", attenuationPct: 73, pitchF: 68, fermF: 68, raiseToF: 71 },
