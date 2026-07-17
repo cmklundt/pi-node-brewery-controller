@@ -90,6 +90,18 @@ export class SimDriver {
   /** sim-only: model a manual transfer/dough-in (e.g. strike water → mash) */
   setTemp(key, tempF) { if (key in this.temps) this.temps[key] = +tempF; }
 
+  /** sim-only: mass-weighted mixing for pumped transfers. `gal` of liquid
+   *  at src temp (minus hose loss) lands in dst, whose level after the
+   *  transfer is destLevelAfter. An empty destination takes the incoming
+   *  temperature outright — this is how dough-in gets modeled. */
+  mixIn(dstKey, srcKey, gal, destLevelAfter, lossF = 1.5) {
+    const src = this.temps[srcKey], dst = this.temps[dstKey];
+    if (src == null || dst == null || gal <= 0) return;
+    const prev = Math.max(0, destLevelAfter - gal);
+    const incoming = src - lossF;
+    this.temps[dstKey] = prev > 0 ? (dst * prev + incoming * gal) / (prev + gal) : incoming;
+  }
+
   async setBuzzer() { /* no-op in sim */ }
   async close() { }
 }

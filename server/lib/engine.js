@@ -234,6 +234,26 @@ export class Engine extends EventEmitter {
       } else if (this._senseMismatch) delete this._senseMismatch[a.id];
     }
 
+    // 6c — sim only: open transfer flows (from ≠ to, no coil loop) move
+    // volume and heat while their pump runs — levels drain/fill and the
+    // destination takes a mass-weighted mix (minus hose loss). On real
+    // hardware levels stay operator-set until flow sensors land.
+    if (this.driver.name === "sim") {
+      const dt = this.driver.speed || 1;
+      for (const f of this.config.flows || []) {
+        if (!f.from || !f.to || f.from === f.to || f.via) continue;
+        if (!this.actorOn[f.pump]) continue;
+        const dst = this.config.vessels.find((v) => v.id === f.to);
+        if (!dst) continue;
+        const room = (dst.volumeGal ?? 99) - (this.levels[f.to] || 0);
+        const gal = Math.min(((f.rateGpm ?? 1.5) / 60) * dt, this.levels[f.from] || 0, room);
+        if (gal <= 0.001) continue;
+        this.levels[f.from] = +((this.levels[f.from] || 0) - gal).toFixed(2);
+        this.levels[f.to] = +((this.levels[f.to] || 0) + gal).toFixed(2);
+        this.driver.mixIn?.(f.to, f.from, gal, this.levels[f.to], f.lossF ?? 1.5);
+      }
+    }
+
     // 7 — bookkeeping
     if (this._learnedDirty && this.uptimeSec % 120 === 0) {
       this._learnedDirty = false;

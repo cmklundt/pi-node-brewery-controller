@@ -41,6 +41,8 @@ export function defaultConfig() {
        * liquid; see docs. */
       { id: "recircPump", name: "Recirc pump", control: "manual", gpio: null,
         kind: "outlet", volts: 120, role: "pump" },
+      { id: "waterPump", name: "Water pump", control: "manual", gpio: null,
+        kind: "outlet", volts: 120, role: "pump" },
       { id: "wortPump", name: "Wort pump", control: "manual", gpio: null,
         kind: "outlet", volts: 120, role: "pump" },
     ],
@@ -70,8 +72,11 @@ export function defaultConfig() {
      * rig diagram; the path animates while its pump runs (GPIO or manual
      * soft-switch). via:"coil" routes through the HERMS coil vessel. */
     flows: [
+      // open transfers (from ≠ to, no via) move volume + heat in the sim:
+      // rateGpm gal/min, lossF °F lost in the hose on the way over
+      { id: "strike",   name: "HLT → Mash (strike/sparge)", pump: "waterPump", from: "hlt", to: "mash", via: null, kind: "water", rateGpm: 1.5, lossF: 1.5 },
       { id: "recirc",   name: "Mash recirc (HERMS)", pump: "recircPump", from: "mash", to: "mash", via: "hlt", kind: "wort" },
-      { id: "transfer", name: "Boil → fermenter",    pump: "wortPump",   from: "boil", to: "ferm", via: null,  kind: "wort" },
+      { id: "transfer", name: "Boil → fermenter",    pump: "wortPump",   from: "boil", to: "ferm", via: null,  kind: "wort", rateGpm: 1.5, lossF: 3 },
     ],
 
     controllers: [
@@ -138,6 +143,14 @@ function migrate(cfg) {
   const stale = cfg.recipe?.name === "Creamsicle NE IPA" && (cfg.recipe.rev || 0) < SEED_REV;
   if (!cfg.recipe?.batch || !cfg.recipe?.grains?.length || stale) merged.recipe = creamsicleIPA();
   else merged.recipe = normalizeRecipe(cfg.recipe);
+  // older configs: add the strike-water transfer path + its pump
+  if (!merged.actors.some((a) => a.id === "waterPump")) {
+    merged.actors.push({ id: "waterPump", name: "Water pump", control: "manual", gpio: null, kind: "outlet", volts: 120, role: "pump" });
+  }
+  merged.flows ??= [];
+  if (!merged.flows.some((f) => f.id === "strike")) {
+    merged.flows.unshift({ id: "strike", name: "HLT → Mash (strike/sparge)", pump: "waterPump", from: "hlt", to: "mash", via: null, kind: "water", rateGpm: 1.5, lossF: 1.5 });
+  }
   return merged;
 }
 

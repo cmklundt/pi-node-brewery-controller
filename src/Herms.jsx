@@ -252,12 +252,16 @@ function FlowPath({ flow, rail, vessels, slot, running, pumpActor, onTogglePump 
   return (
     <g>
       {seg.map((d, i) => <path key={i} d={d} {...pipe} {...dash} />)}
-      {/* pump (tap to toggle — manual outlets mirror the wall switch) */}
+      {/* pump (tap to toggle — manual outlets mirror the wall switch).
+          The arrow points in the direction of flow; no spinning. */}
       <g onClick={onTogglePump} style={{ cursor: "pointer" }}>
         <circle cx={pumpX} cy={rail} r="14" fill={C.bezel} stroke={running ? C.live : C.rule} strokeWidth="2" />
-        <g style={running ? { transformOrigin: `${pumpX}px ${rail}px`, animation: "hspin 1.1s linear infinite" } : undefined}>
-          <path d={`M ${pumpX} ${rail - 8} L ${pumpX + 6.5} ${rail + 5.5} L ${pumpX - 6.5} ${rail + 5.5} Z`} fill={running ? C.live : C.faint} />
-        </g>
+        {(() => {
+          const dir = (V ? V.cx : T.cx) >= F.cx ? 1 : -1; // toward destination
+          const fill = running ? C.live : C.faint;
+          return <path d={`M ${pumpX - 6 * dir} ${rail - 7} L ${pumpX + 8 * dir} ${rail} L ${pumpX - 6 * dir} ${rail + 7} Z`}
+            fill={fill} style={running ? { filter: `drop-shadow(0 0 4px ${C.live})` } : undefined} />;
+        })()}
         <text x={pumpX + 22} y={rail + 4} fill={running ? C.live : C.faint} fontSize="10" style={legend}
           stroke={C.card} strokeWidth="3" paintOrder="stroke">
           {(pumpActor?.name || flow.name).toUpperCase()} {running ? "ON" : "OFF"}{pumpActor?.control === "manual" ? " · MANUAL" : ""}
