@@ -160,8 +160,14 @@ export class Engine extends EventEmitter {
         const target = effTarget(this.steps.step.target); // local boiling point at altitude
         meta.activeTarget = target;
         targets[c.sensor] = target;
-        // full power to the boil, throttle to the power setting once boiling
-        if (t != null) duties[c.actor] = t < target - 2 ? 100 : c.params.power;
+        if (c.params.manualDuty != null) {
+          // operator override: direct duty-cycle control for the whole boil
+          // phase (riding the hot break down, pushing a lazy boil, etc.)
+          duties[c.actor] = clamp(+c.params.manualDuty, 0, 100);
+        } else {
+          // auto: full power to the boil, throttle to the vigor % once boiling
+          if (t != null) duties[c.actor] = t < target - 2 ? 100 : c.params.power;
+        }
       }
 
       if (c.type === "hysteresis" && enabled) {

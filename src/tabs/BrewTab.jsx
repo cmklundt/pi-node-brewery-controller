@@ -192,21 +192,39 @@ function StepRunner({ state, config }) {
         </div>
       )}
 
-      {/* boil vigor — a human call: the sensor reads the same at a simmer
-          and an eruption, so the on/off ratio is yours to dial in */}
+      {/* boil duty — a human call: the sensor reads the same at a simmer
+          and an eruption, so the on/off ratio is yours to dial in. Auto
+          ramps at 100% then holds the vigor %; Manual is direct duty
+          control for the whole phase (ride the hot break down). */}
       {step.vessel === "boil" && (() => {
         const bc = config.controllers.find((c) => c.type === "power");
         if (!bc) return null;
+        const isManual = bc.params.manualDuty != null;
+        const liveDuty = state.duties[bc.actor] ?? 0;
         return (
-          <div style={{ marginTop: 12, padding: "10px 12px", background: C.bezel, borderRadius: 3, border: `1px solid ${C.ruleSoft}` }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
-              <Stepper label={`Boil vigor — % of time element is on once boiling (at ${state.boilingPointF ?? 212}°F here)`}
+          <div style={{ marginTop: 12, padding: "10px 12px", background: C.bezel, borderRadius: 3, border: `1px solid ${isManual ? C.ember : C.ruleSoft}` }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
+              <Tap on={!isManual} color={C.dim} pad="8px 13px" size={11}
+                onClick={() => post(`/api/controllers/${bc.id}`, { manualDuty: null })}>Auto</Tap>
+              <Tap on={isManual} color={C.ember} pad="8px 13px" size={11}
+                onClick={() => post(`/api/controllers/${bc.id}`, { manualDuty: liveDuty || bc.params.power })}>Manual duty</Tap>
+              <span style={{ ...mono, fontSize: 12, color: C.faint, marginLeft: "auto" }}>
+                element now: <b style={{ color: liveDuty > 0 ? C.ember : C.faint }}>{liveDuty}%</b>
+              </span>
+            </div>
+            {isManual ? (
+              <Stepper label={`Manual duty — direct on/off ratio, all of boil phase (boils at ${state.boilingPointF ?? 212}°F here)`}
+                v={bc.params.manualDuty} unit="%" step={5} c={C.ember}
+                set={(v) => post(`/api/controllers/${bc.id}`, { manualDuty: clamp(v, 0, 100) })} />
+            ) : (
+              <Stepper label={`Boil vigor — % once boiling (100% during ramp; boils at ${state.boilingPointF ?? 212}°F here)`}
                 v={bc.params.power} unit="%" step={5} c={C.ember}
                 set={(v) => post(`/api/controllers/${bc.id}`, { power: clamp(v, 20, 100) })} />
-            </div>
+            )}
             <div style={{ fontSize: 10.5, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>
-              Watch the kettle, not the screen: nudge down if it's climbing the walls, up if it's lazy.
-              The temp sensor can't tell a simmer from an eruption — this knob is yours.
+              {isManual
+                ? "You own the element. Classic use: drop to 60–70% as the hot break foams up, then back to your vigor number. Auto restores ramp-then-vigor."
+                : "Watch the kettle, not the screen: nudge down if it's climbing the walls, up if it's lazy. Switch to Manual to control duty during the ramp too."}
             </div>
           </div>
         );
