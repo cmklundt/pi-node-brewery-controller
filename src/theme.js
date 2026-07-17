@@ -14,6 +14,7 @@ button{-webkit-tap-highlight-color:transparent}
 input,select{font:inherit}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
+@media (pointer: coarse) and (max-width: 1440px) { body { zoom: 1.08 } }
 @keyframes flow { to { stroke-dashoffset: -14; } }
 @keyframes pulse { 0%,100%{opacity:.55} 50%{opacity:1} }
 `;

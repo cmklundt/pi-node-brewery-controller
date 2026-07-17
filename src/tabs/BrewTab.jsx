@@ -84,7 +84,7 @@ export default function BrewTab({ state, config }) {
         </div>
         {config.actors.some((a) => a.control === "manual") && (
           <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.ruleSoft}` }}>
-            <div style={{ ...legend, fontSize: 11, color: C.faint, marginBottom: 8 }}>
+            <div style={{ ...legend, fontSize: 12, color: C.faint, marginBottom: 8 }}>
               Manual 120 V outlets — flip these when you flip the real switch
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -135,10 +135,10 @@ function StepRunner({ state, config }) {
     <div style={{ background: C.card, border: `1px solid ${st.awaiting ? C.live : C.rule}`, borderRadius: 4, padding: 16 }}>
       {/* header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <span style={{ ...legend, fontSize: 11, fontWeight: 700, color: pc, border: `1px solid ${pc}`, borderRadius: 3, padding: "3px 8px" }}>
+        <span style={{ ...legend, fontSize: 12, fontWeight: 700, color: pc, border: `1px solid ${pc}`, borderRadius: 3, padding: "3px 8px" }}>
           {PHASE_LABEL[step.phase] || step.phase}
         </span>
-        <span style={{ ...legend, fontSize: 11, color: C.faint }}>step {st.active + 1} / {st.steps.length}</span>
+        <span style={{ ...legend, fontSize: 12, color: C.faint }}>step {st.active + 1} / {st.steps.length}</span>
       </div>
       <div style={{ ...legend, fontSize: 16, fontWeight: 700, margin: "6px 0" }}>
         {manual && <span title="manual step" style={{ marginRight: 7 }}>✋</span>}{step.name}
@@ -146,12 +146,12 @@ function StepRunner({ state, config }) {
 
       {/* instructions + ingredients */}
       {step.instructions && (
-        <div style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.55, marginBottom: 10 }}>{step.instructions}</div>
+        <div style={{ fontSize: 13.5, color: C.dim, lineHeight: 1.55, marginBottom: 10 }}>{step.instructions}</div>
       )}
       {step.ingredients?.length > 0 && (
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
           {step.ingredients.map((ing, i) => (
-            <span key={i} style={{ ...mono, fontSize: 12, padding: "7px 10px", borderRadius: 3, background: C.bezel, border: `1px solid ${pc}`, color: C.text }}>
+            <span key={i} style={{ ...mono, fontSize: 13, padding: "9px 12px", borderRadius: 3, background: C.bezel, border: `1px solid ${pc}`, color: C.text }}>
               {ing.name} <b style={{ color: pc }}>{ing.amount}</b>
             </span>
           ))}
@@ -175,7 +175,7 @@ function StepRunner({ state, config }) {
               {step.target != null && <div style={{ ...mono, fontSize: 12, color: C.dim }}>target {(+step.target).toFixed(1)}°F · {vessel.name}</div>}
             </>
           )}
-          <div style={{ ...legend, fontSize: 11.5, marginTop: 6, color: st.awaiting ? C.live : blocked ? C.ember : st.running ? pc : C.dim }}>
+          <div style={{ ...legend, fontSize: 12.5, marginTop: 6, color: st.awaiting ? C.live : blocked ? C.ember : st.running ? pc : C.dim }}>
             {status}
           </div>
         </div>
@@ -198,7 +198,7 @@ function StepRunner({ state, config }) {
           <div style={{ marginTop: 12, padding: "8px 11px", background: C.bezel, borderRadius: 3, border: `1px solid ${isManual ? C.amber : duty > 0 ? C.ember + "66" : C.ruleSoft}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: onNow ? C.ember : C.dead, boxShadow: onNow ? `0 0 6px ${C.ember}` : "none" }} />
-              <span style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, whiteSpace: "nowrap" }}>
+              <span style={{ ...legend, fontSize: 11.5, fontWeight: 600, color: C.dim, whiteSpace: "nowrap" }}>
                 {(actor?.name || actorId).toUpperCase()} DUTY
               </span>
               <div style={{ flex: 1, height: 5, background: C.dead, borderRadius: 2 }}>
@@ -262,7 +262,7 @@ function StepRunner({ state, config }) {
                 v={bc.params.power} unit="%" step={5} c={C.ember}
                 set={(v) => post(`/api/controllers/${bc.id}`, { power: clamp(v, 20, 100) })} />
             )}
-            <div style={{ fontSize: 10.5, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 11.5, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>
               {isManual
                 ? "You own the element. Classic use: drop to 60–70% as the hot break foams up, then back to your vigor number. Auto restores ramp-then-vigor."
                 : "Watch the kettle, not the screen: nudge down if it's climbing the walls, up if it's lazy. Switch to Manual to control duty during the ramp too."}
@@ -292,7 +292,7 @@ function StepRunner({ state, config }) {
           onClick={() => post("/api/brew/auto", { index: st.active, auto: step.autoAdvance === false })}>
           auto-continue {step.autoAdvance !== false ? "on" : "off"}
         </Tap>
-        <span style={{ fontSize: 10.5, color: C.faint, flex: 1 }}>
+        <span style={{ fontSize: 11.5, color: C.faint, flex: 1 }}>
           {step.autoAdvance !== false ? "flows into the next step when done" : "will hold for your confirmation when done"}
         </span>
         {st.session && !st.running && !st.awaiting && (
@@ -329,7 +329,7 @@ function PhaseSchedule({ st }) {
               </div>
               {ph.items.map((s) => (
                 <div key={s.i} onClick={() => post("/api/brew/select", { index: s.i })}
-                  style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 10px", marginBottom: 4, borderRadius: 3, cursor: "pointer",
+                  style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 11px", marginBottom: 5, borderRadius: 3, cursor: "pointer",
                     background: s.i === st.active ? C.raised : C.bezel,
                     border: `1px solid ${s.i === st.active ? pc : C.ruleSoft}`, opacity: s.i < st.active ? 0.45 : 1 }}>
                   <span style={{ ...mono, fontSize: 10, color: C.faint, width: 16, textAlign: "right" }}>{s.i + 1}</span>
@@ -337,10 +337,10 @@ function PhaseSchedule({ st }) {
                     {s.i < st.active ? "✓" : s.kind === "manual" ? "✋" : "🔥"}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ ...legend, fontSize: 12, fontWeight: 600, color: s.i === st.active ? C.text : C.dim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ ...legend, fontSize: 13, fontWeight: 600, color: s.i === st.active ? C.text : C.dim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {s.name}
                     </div>
-                    <div style={{ ...mono, fontSize: 9.5, color: C.faint }}>
+                    <div style={{ ...mono, fontSize: 10.5, color: C.faint }}>
                       {[s.target ? `${s.target}°F` : null, s.mins ? `${s.mins}m` : null,
                         s.autoAdvance === false ? "confirm" : null].filter(Boolean).join(" · ") || "checklist"}
                     </div>

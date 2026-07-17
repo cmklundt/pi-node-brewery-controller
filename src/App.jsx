@@ -47,7 +47,7 @@ export default function App() {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[["brew", "Brew"], ["ferment", "Ferment"], ["recipe", "Recipe"], ["hardware", "Hardware"], ["reports", "Reports"], ["system", "System"]].map(([k, l]) => (
-            <Tap key={k} on={tab === k} onClick={() => setTab(k)} color={C.amber} pad="10px 16px">{l}</Tap>
+            <Tap key={k} on={tab === k} onClick={() => setTab(k)} color={C.amber} pad="12px 18px">{l}</Tap>
           ))}
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function App() {
         <div style={{ padding: "8px 16px 0", display: "flex", flexDirection: "column", gap: 6, maxWidth: 1240, margin: "0 auto" }}>
           {banners.map((a) => (
             <div key={a.id} onClick={() => setDismissed((d) => new Set([...d, a.id]))}
-              style={{ ...legend, fontSize: 12.5, fontWeight: 600, padding: "9px 12px", borderRadius: 3, cursor: "pointer",
+              style={{ ...legend, fontSize: 13.5, fontWeight: 600, padding: "12px 14px", borderRadius: 3, cursor: "pointer",
                 border: `1px solid ${a.severity === "fault" ? C.ember : a.type === "hop" ? C.ember : C.live}`,
                 background: a.severity === "fault" || a.type === "hop" ? "rgba(226,84,44,.14)" : "rgba(99,212,113,.12)",
                 color: a.severity === "fault" || a.type === "hop" ? C.ember : C.live }}>

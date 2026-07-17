@@ -7,7 +7,7 @@ export function Read({ label, v, on, c, sub, bar, warn, fault }) {
     <div style={{ background: C.card, border: `1px solid ${fault ? C.ember : on ? c : C.rule}`, borderRadius: 4, padding: 12, position: "relative", overflow: "hidden" }}>
       {on && <div style={{ position: "absolute", inset: 0, background: c, opacity: .055 }} />}
       <div style={{ position: "relative" }}>
-        <div style={{ ...legend, fontSize: 12, fontWeight: 700, color: on ? c : C.dim }}>{label}</div>
+        <div style={{ ...legend, fontSize: 13, fontWeight: 700, color: on ? c : C.dim }}>{label}</div>
         <div style={{ ...mono, fontSize: 32, lineHeight: 1.1, marginTop: 4, color: fault ? C.ember : on ? c : C.text }}>
           {fault || v == null ? "—" : v.toFixed(1)}<span style={{ fontSize: 13, color: C.faint }}>°F</span>
         </div>
@@ -16,7 +16,7 @@ export function Read({ label, v, on, c, sub, bar, warn, fault }) {
             <div style={{ height: "100%", width: `${bar}%`, background: c, transition: "width .3s" }} />
           </div>
         )}
-        <div style={{ ...legend, fontSize: 10, color: fault ? C.ember : warn ? C.ember : C.faint, marginTop: 7 }}>{fault ? "RTD FAULT — check probe" : sub}</div>
+        <div style={{ ...legend, fontSize: 11, color: fault ? C.ember : warn ? C.ember : C.faint, marginTop: 7 }}>{fault ? "RTD FAULT — check probe" : sub}</div>
       </div>
     </div>
   );
@@ -40,13 +40,13 @@ export function Ring({ pct, live, color, children, size = 112 }) {
 }
 
 export function Stepper({ label, v, set, step, unit, c }) {
-  const btn = { ...legend, fontSize: 22, fontWeight: 600, width: 46, height: 46, borderRadius: 3, cursor: "pointer", border: `1px solid ${C.rule}`, background: C.bezel, color: C.text, flexShrink: 0 };
+  const btn = { ...legend, fontSize: 24, fontWeight: 600, width: 54, height: 54, borderRadius: 3, cursor: "pointer", border: `1px solid ${C.rule}`, background: C.bezel, color: C.text, flexShrink: 0 };
   return (
     <div>
       <div style={{ ...legend, fontSize: 10.5, color: C.faint, marginBottom: 5 }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <button style={btn} onClick={() => set(+(v - step).toFixed(1))}>−</button>
-        <div style={{ ...mono, flex: 1, textAlign: "center", fontSize: 19, color: c, fontWeight: 500 }}>
+        <div style={{ ...mono, flex: 1, textAlign: "center", fontSize: 21, color: c, fontWeight: 500 }}>
           {v}<span style={{ fontSize: 9.5, color: C.faint }}> {unit}</span>
         </div>
         <button style={btn} onClick={() => set(+(v + step).toFixed(1))}>+</button>
@@ -55,9 +55,9 @@ export function Stepper({ label, v, set, step, unit, c }) {
   );
 }
 
-export function Tap({ on, onClick, color, children, pad = "10px 16px", size = 13, disabled }) {
+export function Tap({ on, onClick, color, children, pad = "12px 18px", size = 14, disabled }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{ ...legend, fontSize: size, fontWeight: 600, padding: pad, borderRadius: 3, cursor: "pointer", opacity: disabled ? .4 : 1, border: `1.5px solid ${on ? color : C.rule}`, background: on ? `${color}22` : "transparent", color: on ? color : C.faint, whiteSpace: "nowrap" }}>
+    <button onClick={onClick} disabled={disabled} style={{ ...legend, fontSize: size, fontWeight: 600, padding: pad, borderRadius: 3, cursor: "pointer", minHeight: 40, opacity: disabled ? .4 : 1, border: `1.5px solid ${on ? color : C.rule}`, background: on ? `${color}22` : "transparent", color: on ? color : C.faint, whiteSpace: "nowrap" }}>
       {children}
     </button>
   );
@@ -65,7 +65,7 @@ export function Tap({ on, onClick, color, children, pad = "10px 16px", size = 13
 
 export function Big({ onClick, color, children, ghost, disabled }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{ ...legend, flex: 1, fontSize: 14, fontWeight: 700, padding: "15px 10px", borderRadius: 3, cursor: "pointer", opacity: disabled ? .4 : 1, border: `1.5px solid ${color}`, background: ghost ? "transparent" : `${color}26`, color }}>
+    <button onClick={onClick} disabled={disabled} style={{ ...legend, flex: 1, fontSize: 15, fontWeight: 700, padding: "17px 10px", borderRadius: 3, cursor: "pointer", opacity: disabled ? .4 : 1, border: `1.5px solid ${color}`, background: ghost ? "transparent" : `${color}26`, color }}>
       {children}
     </button>
   );
@@ -76,8 +76,8 @@ export function Pilot({ label, gpio, on, c }) {
     <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 11px", background: C.bezel, border: `1px solid ${on ? c : C.ruleSoft}`, borderRadius: 3 }}>
       <span style={{ width: 11, height: 11, borderRadius: "50%", background: on ? c : C.dead, boxShadow: on ? `0 0 8px ${c}` : "none", flexShrink: 0 }} />
       <div>
-        <div style={{ ...legend, fontSize: 11, fontWeight: 600, color: on ? C.text : C.dim }}>{label}</div>
-        <div style={{ ...mono, fontSize: 9, color: C.faint }}>GPIO {gpio}</div>
+        <div style={{ ...legend, fontSize: 12, fontWeight: 600, color: on ? C.text : C.dim }}>{label}</div>
+        <div style={{ ...mono, fontSize: 10, color: C.faint }}>GPIO {gpio}</div>
       </div>
     </div>
   );
@@ -87,7 +87,7 @@ export function Panel({ title, children, right }) {
   return (
     <div style={{ background: C.card, border: `1px solid ${C.rule}`, borderRadius: 4, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ ...legend, fontSize: 14, fontWeight: 700 }}>{title}</div>
+        <div style={{ ...legend, fontSize: 15, fontWeight: 700 }}>{title}</div>
         {right}
       </div>
       {children}
@@ -97,28 +97,28 @@ export function Panel({ title, children, right }) {
 
 export function Row({ k, v, sub, ok, onClick }) {
   return (
-    <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 11px", marginBottom: 6, background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderRadius: 3, cursor: onClick ? "pointer" : "default" }}>
+    <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 12px", marginBottom: 6, background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderRadius: 3, cursor: onClick ? "pointer" : "default" }}>
       <span style={{ width: 7, height: 7, borderRadius: "50%", background: ok ? C.live : C.dead, flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ ...legend, fontSize: 12, fontWeight: 600 }}>{k}</div>
-        <div style={{ ...mono, fontSize: 9.5, color: C.faint }}>{sub}</div>
+        <div style={{ ...legend, fontSize: 13, fontWeight: 600 }}>{k}</div>
+        <div style={{ ...mono, fontSize: 10.5, color: C.faint }}>{sub}</div>
       </div>
-      <span style={{ ...mono, fontSize: 10.5, color: C.dim, whiteSpace: "nowrap" }}>{v}</span>
+      <span style={{ ...mono, fontSize: 11.5, color: C.dim, whiteSpace: "nowrap" }}>{v}</span>
     </div>
   );
 }
 
 export function Note({ children }) {
-  return <div style={{ fontSize: 11, color: C.faint, marginTop: 10, lineHeight: 1.5, paddingTop: 10, borderTop: `1px solid ${C.ruleSoft}` }}>{children}</div>;
+  return <div style={{ fontSize: 12, color: C.faint, marginTop: 10, lineHeight: 1.5, paddingTop: 10, borderTop: `1px solid ${C.ruleSoft}` }}>{children}</div>;
 }
 
 /** Editable input — warm-tinted like the spreadsheet's yellow "you type here" cells. */
 export function Field({ label, value, onChange, width = "100%", type = "text" }) {
   return (
     <label style={{ display: "block", marginBottom: 8 }}>
-      {label && <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 3 }}>{label}</div>}
+      {label && <div style={{ ...legend, fontSize: 11.5, fontWeight: 600, color: C.dim, marginBottom: 3 }}>{label}</div>}
       <input type={type} value={value ?? ""} step="any" onChange={(e) => onChange(type === "number" ? +e.target.value : e.target.value)}
-        style={{ ...mono, width, boxSizing: "border-box", fontSize: 13, padding: "10px 7px", minWidth: 0,
+        style={{ ...mono, width, boxSizing: "border-box", fontSize: 14.5, padding: "12px 8px", minWidth: 0,
           background: "rgba(242,160,61,0.06)", color: C.text,
           border: `1px solid ${C.rule}`, borderLeft: `3px solid ${C.amber}88`, borderRadius: 3 }} />
     </label>
@@ -129,7 +129,7 @@ export function Field({ label, value, onChange, width = "100%", type = "text" })
 export function Computed({ label, v, unit, good }) {
   return (
     <div style={{ background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderLeft: `3px solid ${C.glycol}88`, borderRadius: 3, padding: "8px 10px" }}>
-      <div style={{ ...legend, fontSize: 9.5, fontWeight: 600, color: C.dim }}>ƒ {label}</div>
+      <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim }}>ƒ {label}</div>
       <div style={{ ...mono, fontSize: 15, color: good === false ? C.ember : C.glycol, marginTop: 2 }}>
         {v ?? "—"}{unit && <span style={{ fontSize: 10, color: C.faint }}> {unit}</span>}
       </div>

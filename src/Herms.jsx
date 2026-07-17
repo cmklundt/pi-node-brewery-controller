@@ -152,7 +152,7 @@ function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, 
           const ty = innerBot - (innerBot - innerTop) * (g5 / v.volumeGal);
           return <line key={g5} x1={x + W + 16} x2={x + W + 21} y1={ty} y2={ty} stroke={C.faint} strokeWidth="1" />;
         })}
-        <text x={x + W + 12} y={innerBot + 14} textAnchor="middle" fill={C.faint} fontSize="9.5" style={mono}>
+        <text x={x + W + 12} y={innerBot + 14} textAnchor="middle" fill={C.faint} fontSize="10.5" style={mono}>
           {levelGal ?? 0}g
         </text>
       </g>
@@ -168,7 +168,7 @@ function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, 
           <rect x={x + 10} y={FLOOR + 10} width={(W - 20) * elementDuty / 100} height="5" rx="2" fill={C.ember} />
           <circle cx={x + 17} cy={FLOOR + 27} r="4.5" fill={elementOn ? C.ember : C.dead}
             style={elementOn ? { filter: `drop-shadow(0 0 5px ${C.ember})` } : undefined} />
-          <text x={x + 27} y={FLOOR + 30} fill={C.faint} fontSize="10" style={legend}>ELEMENT</text>
+          <text x={x + 27} y={FLOOR + 30} fill={C.faint} fontSize="11" style={legend}>ELEMENT</text>
           <text x={x + W - 10} y={FLOOR + 30} textAnchor="end" fill={C.faint} fontSize="11" style={mono}>{elementDuty}%</text>
         </g>
       )}
@@ -220,9 +220,9 @@ function Conical({ x, v, tempR, targetF, levelGal, glycolOn, heatOn, onTap }) {
       <text x={cx} y={top + 90} textAnchor="middle" fill={C.faint} fontSize="10" style={mono}>{levelGal ?? 0} gal</text>
       {/* pilots */}
       <circle cx={x + 18} cy={FLOOR + 14} r="4.5" fill={glycolOn ? C.glycol : C.dead} style={glycolOn ? { filter: `drop-shadow(0 0 5px ${C.glycol})` } : undefined} />
-      <text x={x + 27} y={FLOOR + 17} fill={glycolOn ? C.glycol : C.faint} fontSize="10" style={legend}>GLYCOL</text>
+      <text x={x + 27} y={FLOOR + 17} fill={glycolOn ? C.glycol : C.faint} fontSize="11" style={legend}>GLYCOL</text>
       <circle cx={x + 18} cy={FLOOR + 30} r="4.5" fill={heatOn ? C.amber : C.dead} style={heatOn ? { filter: `drop-shadow(0 0 5px ${C.amber})` } : undefined} />
-      <text x={x + 27} y={FLOOR + 33} fill={heatOn ? C.amber : C.faint} fontSize="10" style={legend}>HEAT</text>
+      <text x={x + 27} y={FLOOR + 33} fill={heatOn ? C.amber : C.faint} fontSize="11" style={legend}>HEAT</text>
     </g>
   );
 }
