@@ -181,6 +181,30 @@ function StepRunner({ state, config }) {
         </div>
       </div>
 
+      {/* live duty cycle of whichever element this step drives (HERMS:
+          mash steps drive the HLT element) */}
+      {(() => {
+        if (!step.vessel) return null;
+        const ctrl = config.controllers.find((c) => c.vessel === step.vessel && c.type !== "hysteresis");
+        const actorId = ctrl?.actor;
+        if (!actorId) return null;
+        const actor = config.actors.find((a) => a.id === actorId);
+        const duty = state.duties?.[actorId] ?? 0;
+        const onNow = !!state.actorOn?.[actorId];
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: "8px 11px", background: C.bezel, borderRadius: 3, border: `1px solid ${duty > 0 ? C.ember + "66" : C.ruleSoft}` }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: onNow ? C.ember : C.dead, boxShadow: onNow ? `0 0 6px ${C.ember}` : "none" }} />
+            <span style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, whiteSpace: "nowrap" }}>
+              {(actor?.name || actorId).toUpperCase()} DUTY
+            </span>
+            <div style={{ flex: 1, height: 5, background: C.dead, borderRadius: 2 }}>
+              <div style={{ height: "100%", width: `${duty}%`, background: C.ember, borderRadius: 2, transition: "width .4s" }} />
+            </div>
+            <span style={{ ...mono, fontSize: 14, color: duty > 0 ? C.ember : C.faint, width: 42, textAlign: "right" }}>{duty}%</span>
+          </div>
+        );
+      })()}
+
       {/* per-step tuning — live: changes apply on the next control tick,
           including during manual hold-steps and confirm-holds */}
       {step.target != null && (
