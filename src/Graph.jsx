@@ -1,6 +1,6 @@
 /** Graph.jsx — live + historical temperature chart (dynamic sensor set). */
 import React from "react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, CartesianGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, CartesianGrid, Tooltip } from "recharts";
 import { C, legend, mono } from "./theme.js";
 
 const PALETTE = [C.amber, C.live, C.ember, C.glycol, "#B48EDE", "#E0C34E", "#6ED4B8"];
@@ -27,7 +27,7 @@ export default function Graph({ rows, config, series, setSeries, range, setRange
         <span style={{ ...legend, fontSize: 14, fontWeight: 700 }}>{title}</span>
         {setRange && (
           <div style={{ display: "flex", gap: 6 }}>
-            {[15, 60, 240, 1440].map((r) => (
+            {[1, 15, 60, 240, 1440].map((r) => (
               <button key={r} onClick={() => setRange(r)}
                 style={{ ...legend, fontSize: 12, fontWeight: 600, padding: "8px 13px", borderRadius: 3, cursor: "pointer", border: `1.5px solid ${range === r ? C.dim : C.rule}`, background: range === r ? `${C.dim}22` : "transparent", color: range === r ? C.text : C.faint }}>
                 {r < 60 ? `${r}m` : `${r / 60}h`}
@@ -44,6 +44,14 @@ export default function Graph({ rows, config, series, setSeries, range, setRange
               stroke={C.ruleSoft} tickLine={false} minTickGap={50} />
             <YAxis domain={domain || ["auto", "auto"]} tick={{ fill: C.faint, fontSize: 10, fontFamily: "'IBM Plex Mono',monospace" }}
               stroke={C.ruleSoft} tickLine={false} width={44} />
+            <Tooltip
+              cursor={{ stroke: C.dim, strokeWidth: 1, strokeDasharray: "3 3" }}
+              isAnimationActive={false}
+              labelFormatter={(v) => new Date(v).toLocaleTimeString()}
+              formatter={(value, name) => [`${(+value).toFixed(1)}°F`, name]}
+              contentStyle={{ background: C.bezel, border: `1px solid ${C.rule}`, borderRadius: 4, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+              labelStyle={{ color: C.dim, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, marginBottom: 4 }}
+              itemStyle={{ padding: "1px 0" }} />
             {refLine != null && <ReferenceLine y={refLine} stroke={C.text} strokeDasharray="4 4" strokeOpacity={0.35} />}
             {sensorIds.filter((id) => only || !series || series[id] !== false).map((id) => (
               <Line key={id} type="monotone" dataKey={id} stroke={sensorColor(config, id)} dot={false}
