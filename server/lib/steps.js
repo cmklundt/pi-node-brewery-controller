@@ -57,8 +57,10 @@ export class StepEngine {
     return s;
   }
 
-  /** Called once per second with the sensed temp of the active step's vessel. */
-  tick(sensedF) {
+  /** Called once per second with the sensed temp of the active step's
+   *  vessel. dt = simulated seconds per real second (1 on hardware, the
+   *  time multiplier in sim — so rests and boils accelerate with temps). */
+  tick(sensedF, dt = 1) {
     const step = this.step;
     if (!step || !this.running || sensedF == null) return;
 
@@ -69,7 +71,7 @@ export class StepEngine {
 
     if (step.kind === "ramp") return this.#advance();
 
-    this.left = Math.max(0, this.left - 1);
+    this.left = Math.max(0, this.left - dt);
     if (step.hops) {
       for (const h of step.hops) {
         const key = `${step.id}-${h.at}`;

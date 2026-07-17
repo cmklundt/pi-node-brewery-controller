@@ -30,27 +30,54 @@ export function defaultConfig() {
     })),
 
     actors: [
-      ...HW.ACTORS.filter((a) => a.id !== "spareC").map((a) => ({ ...a })),
-      // Spare C carries the recirc pump — the HERMS coil only moves heat
-      // while this runs. Rename/remap freely in Setup if it lands elsewhere.
-      { id: "recircPump", name: "Recirc pump", gpio: 5, kind: "relay",
-        volts: 120, modulated: false, inductive: true, wasSpare: "C" },
+      ...HW.ACTORS.map((a) => ({ ...a, control: "gpio" })),
+      /* Manually-switched 120 V outlets: no GPIO — the operator flips a
+       * real switch and mirrors it with a soft switch in the UI. Flow and
+       * chill animations follow the declared state. The shield's flow
+       * inputs (GPIO 12/13) can later confirm a pump is actually moving
+       * liquid; see docs. */
+      { id: "recircPump", name: "Recirc pump", control: "manual", gpio: null,
+        kind: "outlet", volts: 120, role: "pump" },
+      { id: "wortPump", name: "Wort pump", control: "manual", gpio: null,
+        kind: "outlet", volts: 120, role: "pump" },
     ],
 
     vessels: [
-      { id: "hlt",  name: "HLT",       kind: "kettle",  sensor: "hlt",  element: "hltElement",  graphic: "kettle-coil", volumeGal: 15 },
-      { id: "mash", name: "Mash tun",  kind: "mashtun", sensor: "mash", element: null,          graphic: "mashtun",     volumeGal: 15 },
-      { id: "boil", name: "Boil",      kind: "kettle",  sensor: "boil", element: "boilElement", graphic: "kettle",      volumeGal: 20 },
-      { id: "ferm", name: "Fermenter", kind: "conical", sensor: "ferm", element: null,          graphic: "conical",     volumeGal: 14 },
+      // Blichmann kettles — volumeGal sizes the drawing, levelGal is the
+      // current fill (tap the sight glass on the panel to set it).
+      { id: "hlt",  name: "HLT",       kind: "kettle",  sensor: "hlt",  element: "hltElement",  graphic: "kettle-coil", volumeGal: 15, levelGal: 12 },
+      { id: "mash", name: "Mash tun",  kind: "mashtun", sensor: "mash", element: null,          graphic: "mashtun",     volumeGal: 15, levelGal: 0 },
+      { id: "boil", name: "Boil",      kind: "kettle",  sensor: "boil", element: "boilElement", graphic: "kettle",      volumeGal: 20, levelGal: 0 },
+      { id: "ferm", name: "Fermenter", kind: "conical", sensor: "ferm", element: null,          graphic: "conical",     volumeGal: 14, levelGal: 10 },
+    ],
+
+    /* Sense inputs: ANY free GPIO can be wired as a monitored input —
+     * pilot-relay contacts across a manually-switched 120 V outlet, a
+     * door switch, a float, a flow-pulse line read as level. Each shows
+     * as a live indicator in Setup; linkedActor ties one to an actor so
+     * the rig diagram follows hardware truth instead of the soft switch
+     * (see docs/outlet-sensing.md). Add entries in the Setup tab. */
+    inputs: [
+      // example (uncommissioned until you set a real gpio):
+      // { id: "recircSense", name: "Recirc outlet sense", gpio: 12,
+      //   linkedActor: "recircPump", invert: false }
+    ],
+
+    /* Flow paths: which pump moves liquid where. Drawn as piping on the
+     * rig diagram; the path animates while its pump runs (GPIO or manual
+     * soft-switch). via:"coil" routes through the HERMS coil vessel. */
+    flows: [
+      { id: "recirc",   name: "Mash recirc (HERMS)", pump: "recircPump", from: "mash", to: "mash", via: "hlt", kind: "wort" },
+      { id: "transfer", name: "Boil → fermenter",    pump: "wortPump",   from: "boil", to: "ferm", via: null,  kind: "wort" },
     ],
 
     controllers: [
       { id: "mash", name: "Mash (HERMS)", type: "pid", sensor: "mash", actor: "hltElement",
-        vessel: "mash", params: { kp: 14, ki: 0.02, kd: 0, maxOutput: 100 },
+        vessel: "mash", params: { kp: 14, ki: 0.05, kd: 0, maxOutput: 100, integralClamp: 60 },
         constraints: { hltOvershootCapF: HW.SAFETY.hltOvershootCapF, capSensor: "hlt" },
         note: HW.KETTLES.find((k) => k.id === "mash")?.note },
       { id: "hlt", name: "HLT", type: "pid", sensor: "hlt", actor: "hltElement",
-        vessel: "hlt", params: { kp: 14, ki: 0.02, kd: 0, maxOutput: 100 } },
+        vessel: "hlt", params: { kp: 14, ki: 0.05, kd: 0, maxOutput: 100, integralClamp: 60 } },
       { id: "boil", name: "Boil", type: "power", sensor: "boil", actor: "boilElement",
         vessel: "boil", params: { power: 75 } },
       { id: "ferm", name: "Fermenter", type: "hysteresis", sensor: "ferm",

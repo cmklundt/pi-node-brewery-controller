@@ -9,10 +9,13 @@
  * runs, everything loses heat to ambient.
  */
 const AMBIENT = 62;
+// Gains ≈ a 5500 W element in 15–20 gal (~3°F/min); losses set so an
+// insulated kettle's equilibrium sits well above boiling. (The prototype's
+// loss constants capped the HLT at ~104°F — the deviation alert caught it.)
 const K = {
   hltGain: 0.055, boilGain: 0.05,
-  hltLoss: 0.0013, boilLoss: 0.0016, mashLoss: 0.0006, fermLoss: 0.0004,
-  coil: 0.0078, fermGlycol: 0.010, fermHeat: 0.006,
+  hltLoss: 0.00032, boilLoss: 0.00035, mashLoss: 0.0005, fermLoss: 0.0003,
+  coil: 0.02, fermGlycol: 0.010, fermHeat: 0.006,
 };
 
 export class SimDriver {
@@ -43,9 +46,11 @@ export class SimDriver {
       nx.boil += on("boilElement") * K.boilGain - (t.boil - AMBIENT) * K.boilLoss;
       if (nx.boil > 212.4) nx.boil = 212.4; // rolling boil ceiling
       if (on("recircPump")) {
+        // HERMS recirc at ~5 gpm equalizes mash toward HLT within minutes;
+        // equal and opposite so the coil conserves energy between equal volumes
         const dT = t.hlt - t.mash;
         nx.mash += dT * K.coil;
-        nx.hlt -= dT * K.coil * 0.55;
+        nx.hlt -= dT * K.coil;
       }
       nx.mash -= (t.mash - AMBIENT) * K.mashLoss;
       nx.ferm += on("fermentHeat") * K.fermHeat - on("glycolPump") * K.fermGlycol
@@ -77,6 +82,8 @@ export class SimDriver {
   async readInterlock() { return this.interlock; }
   setInterlock(pos) { this.interlock = pos; }
   setSpeed(x) { this.speed = Math.max(1, Math.min(120, +x || 1)); }
+  /** sim-only: model a manual transfer/dough-in (e.g. strike water → mash) */
+  setTemp(key, tempF) { if (key in this.temps) this.temps[key] = +tempF; }
 
   async setBuzzer() { /* no-op in sim */ }
   async close() { }

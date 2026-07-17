@@ -53,7 +53,13 @@ export class Engine extends EventEmitter {
       if (c.type === "pid") this.pids[c.id] = new PID(c.params);
       if (c.type === "hysteresis") this.hys[c.id] = new Hysteresis(c.params);
     }
-    for (const a of this.config.actors) this.manual[a.id] ??= "auto";
+    // manual-outlet actors default to their declared soft-switch state (off);
+    // GPIO actors default to controller-driven "auto"
+    for (const a of this.config.actors)
+      this.manual[a.id] ??= a.control === "manual" ? "off" : "auto";
+    // vessel fill levels (gal) — no level sensors, operator sets them
+    this.levels ??= {};
+    for (const v of this.config.vessels) this.levels[v.id] ??= v.levelGal ?? 0;
   }
 
   /** hot-reload after a config edit from the Setup tab */
@@ -98,7 +104,8 @@ export class Engine extends EventEmitter {
     const step = this.steps.step;
     if (step) {
       const vessel = this.config.vessels.find((v) => v.id === step.vessel);
-      this.steps.tick(this.readings[vessel?.sensor]?.tempF ?? null);
+      const dt = this.driver.name === "sim" ? (this.driver.speed || 1) : 1;
+      this.steps.tick(this.readings[vessel?.sensor]?.tempF ?? null, dt);
     }
 
     // 4 — controllers -> duties
@@ -169,6 +176,37 @@ export class Engine extends EventEmitter {
       }
     }
 
+    // 6b — sense inputs: read every declared pin; hardware truth wins
+    // over soft switches for linked actors (see docs/outlet-sensing.md)
+    this.inputStates = {};
+    const senses = [
+      // generic inputs (any pin), optionally linked to an actor
+      ...(this.config.inputs || []).map((i) => ({ key: i.id, gpio: i.gpio, invert: i.invert, actorId: i.linkedActor })),
+      // shorthand: senseGpio directly on a manual actor
+      ...this.config.actors.filter((a) => a.senseGpio != null)
+        .map((a) => ({ key: `${a.id}.sense`, gpio: a.senseGpio, invert: a.senseInvert, actorId: a.id })),
+    ];
+    for (const s of senses) {
+      let v = await this.driver.readGpio?.(s.gpio);
+      if (v == null) continue;
+      if (s.invert) v = !v;
+      this.inputStates[s.key] = v;
+      const a = s.actorId && this.config.actors.find((x) => x.id === s.actorId);
+      if (!a || a.control !== "manual") continue;
+      this.actorOn[a.id] = v;
+      const declared = this.manual[a.id] === "on";
+      if (v !== declared) {
+        this._senseMismatch ??= {};
+        this._senseMismatch[a.id] ??= this.uptimeSec;
+        if (this.uptimeSec - this._senseMismatch[a.id] === 5) {
+          this.alerts.event("sense-mismatch",
+            `${a.name}: switch is ${v ? "ON" : "OFF"} but panel says ${declared ? "on" : "off"} — syncing`, "info");
+          this.manual[a.id] = v ? "on" : "off";
+          delete this._senseMismatch[a.id];
+        }
+      } else if (this._senseMismatch) delete this._senseMismatch[a.id];
+    }
+
     // 7 — bookkeeping
     this.history.sample(this.uptimeSec, this.readings, { ...this.duties }, targets);
     this.alerts.watch(this.uptimeSec, ctrlState, this.readings);
@@ -214,9 +252,19 @@ export class Engine extends EventEmitter {
 
   setManual(actorId, mode) {
     if (!["auto", "on", "off"].includes(mode)) throw new Error("bad mode");
-    if (!this.config.actors.some((a) => a.id === actorId)) throw new Error("unknown actor");
+    const a = this.config.actors.find((x) => x.id === actorId);
+    if (!a) throw new Error("unknown actor");
+    if (a.control === "manual" && mode === "auto") mode = "off"; // no controller drives an outlet
     this.manual[actorId] = mode;
-    this.alerts.event("manual", `${actorId} → ${mode}`, "info");
+    this.alerts.event("manual", `${a.name} → ${mode}`, "info");
+  }
+
+  setLevel(vesselId, gal) {
+    const v = this.config.vessels.find((x) => x.id === vesselId);
+    if (!v) throw new Error("unknown vessel");
+    this.levels[vesselId] = Math.max(0, Math.min(v.volumeGal ?? 999, +gal || 0));
+    v.levelGal = this.levels[vesselId]; // persisted with the config document
+    return this.levels[vesselId];
   }
 
   setControllerParams(id, params) {
@@ -243,7 +291,10 @@ export class Engine extends EventEmitter {
       controllers: this._ctrlState || [],
       steps: this.steps.snapshot(),
       timers: this.alerts.timerSnapshot(),
+      levels: this.levels,
+      inputs: this.inputStates || {},
       simSpeed: this.driver.speed,
+      paused: this.paused,
     };
   }
 }

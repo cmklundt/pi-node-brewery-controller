@@ -70,12 +70,20 @@ export function buildApp({ engine, alerts, push, history, getConfig, setConfig }
 
   // ── actors / controllers / interlock ──
   app.post("/api/actors/:id", guard((req) => engine.setManual(req.params.id, req.body.mode)));
-  app.post("/api/controllers/:id", guard((req) => engine.setControllerParams(req.params.id, req.body)));
+  app.post("/api/vessels/:id/level", guard((req) => {
+    engine.setLevel(req.params.id, req.body.gal);
+    saveConfig(getConfig()); // levels survive a reboot
+  }));
+  app.post("/api/controllers/:id", guard((req) => {
+    engine.setControllerParams(req.params.id, req.body);
+    saveConfig(getConfig()); // ferment target etc. survive a reboot
+  }));
   app.post("/api/interlock", guard((req) => engine.setInterlock(req.body.position)));
 
   // ── sim conveniences (no-ops against real hardware) ──
   app.post("/api/sim/speed", guard((req) => engine.driver.setSpeed?.(req.body.speed)));
   app.post("/api/sim/pause", guard((req) => { engine.paused = !!req.body.paused; }));
+  app.post("/api/sim/temp", guard((req) => engine.driver.setTemp?.(req.body.id, req.body.tempF)));
 
   // ── timers ──
   app.post("/api/timers", guard((req, res) => ok(res, { id: alerts.addTimer(req.body.name || "Timer", +req.body.seconds) })));

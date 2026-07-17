@@ -55,6 +55,17 @@ export class RealDriver {
       this.inputs[config.interlock.senseGpio] =
         this.#requestInput(config.interlock.senseGpio, "brewery-interlock");
     }
+    // Manual 120 V outlets with a sense wire (pilot relay / AC opto / flow
+    // pulse): the Pi reads the truth instead of trusting the soft switch.
+    for (const a of config.actors.filter((x) => x.senseGpio != null)) {
+      this.inputs[a.senseGpio] = this.#requestInput(a.senseGpio, `brewery-sense-${a.id}`);
+    }
+    // Generic sense inputs — any free pin declared in config.inputs
+    for (const inp of config.inputs || []) {
+      if (inp.gpio != null && !this.inputs[inp.gpio]) {
+        this.inputs[inp.gpio] = this.#requestInput(inp.gpio, `brewery-input-${inp.id}`);
+      }
+    }
 
     // SPI bus for the MAX31865s — manual CS, mode 1 (CPOL=0, CPHA=1)
     const spiDevice = (await import("spi-device")).default;
@@ -153,6 +164,12 @@ export class RealDriver {
     // Single opto senses "an element bank is armed". Which one is armed is
     // still reported by the operator-facing selector switch; see config.
     return this.inputs[g].getValue() ? this.config.interlock.senseHighMeans || "ARMED" : "OFF";
+  }
+
+  /** read any requested input pin (null = not wired/requested) */
+  async readGpio(gpio) {
+    if (gpio == null || !this.inputs[gpio]) return null;
+    return this.inputs[gpio].getValue() === 1;
   }
 
   async setBuzzer(on) {
