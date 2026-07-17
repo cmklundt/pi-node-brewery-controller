@@ -257,7 +257,8 @@ function FlowPath({ flow, rail, vessels, slot, running, pumpActor, onTogglePump 
         <g style={running ? { transformOrigin: `${pumpX}px ${rail}px`, animation: "hspin 1.1s linear infinite" } : undefined}>
           <path d={`M ${pumpX} ${rail - 8} L ${pumpX + 6.5} ${rail + 5.5} L ${pumpX - 6.5} ${rail + 5.5} Z`} fill={running ? C.live : C.faint} />
         </g>
-        <text x={pumpX + 22} y={rail + 4} fill={running ? C.live : C.faint} fontSize="10" style={legend}>
+        <text x={pumpX + 22} y={rail + 4} fill={running ? C.live : C.faint} fontSize="10" style={legend}
+          stroke={C.card} strokeWidth="3" paintOrder="stroke">
           {(pumpActor?.name || flow.name).toUpperCase()} {running ? "ON" : "OFF"}{pumpActor?.control === "manual" ? " · MANUAL" : ""}
         </text>
       </g>

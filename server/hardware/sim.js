@@ -9,12 +9,15 @@
  * runs, everything loses heat to ambient.
  */
 const AMBIENT = 62;
-// Gains ≈ a 5500 W element in 15–20 gal (~3°F/min); losses set so an
-// insulated kettle's equilibrium sits well above boiling. (The prototype's
-// loss constants capped the HLT at ~104°F — the deviation alert caught it.)
+// Real-world constants, per simulated second:
+//  - element gain ≈ 5500 W into 15–20 gal ≈ 3.3°F/min at full duty
+//  - losses ≈ 2–5°F/hour for insulated kettles (the prototype's constants
+//    were ~50× too lossy — the mash tun bled heat faster than the element
+//    could push through the coil, which the deviation alert caught)
+//  - coil ≈ recirc at ~5 gpm equalizes mash → HLT in a few minutes
 const K = {
   hltGain: 0.055, boilGain: 0.05,
-  hltLoss: 0.00032, boilLoss: 0.00035, mashLoss: 0.0005, fermLoss: 0.0003,
+  hltLoss: 0.00001, boilLoss: 0.000012, mashLoss: 0.000008, fermLoss: 0.000005,
   coil: 0.02, fermGlycol: 0.010, fermHeat: 0.006,
 };
 
