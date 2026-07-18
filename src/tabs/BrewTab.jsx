@@ -28,6 +28,8 @@ export default function BrewTab({ state, config }) {
   return (<>
     <Herms config={config} state={state} onSelectVessel={(id) => setSelVessel(id === selVessel ? null : id)} />
 
+    <PumpRoutes config={config} state={state} />
+
     {selVessel && (() => {
       const v = config.vessels.find((x) => x.id === selVessel);
       if (!v) return null;
@@ -352,6 +354,57 @@ function PhaseSchedule({ st }) {
         })}
       </div>
     </Panel>
+  );
+}
+
+/* ── pump line selectors (under the kettles) ──────────────────
+ * One card per physical pump: an on/off button, then a segmented
+ * toggle of that pump's possible destinations. Tap the line you want —
+ * no fiddling with the little valve on the diagram. This is the same
+ * routing the diagram's valve drives; they stay in sync. */
+function PumpRoutes({ config, state }) {
+  const flows = config.flows || [];
+  const vessels = config.vessels || [];
+  const pumps = [...new Set(flows.map((f) => f.pump))];
+  if (!pumps.length) return null;
+
+  const vn = (id) => vessels.find((v) => v.id === id)?.name || id;
+  const shortLabel = (f) => f.via ? "Recirc (HERMS)" : f.from === f.to ? `${vn(f.from)} loop` : `→ ${vn(f.to)}`;
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: 10, marginTop: 10 }}>
+      {pumps.map((pumpId) => {
+        const pflows = flows.filter((f) => f.pump === pumpId);
+        const routedId = state.routes?.[pumpId] ?? pflows[0]?.id;
+        const actor = config.actors.find((a) => a.id === pumpId);
+        const running = !!state.actorOn?.[pumpId] || state.manual?.[pumpId] === "on";
+        return (
+          <div key={pumpId} style={{ background: C.card, border: `1px solid ${running ? C.live + "66" : C.rule}`, borderRadius: 4, padding: "11px 13px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9, flexWrap: "wrap" }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", flexShrink: 0, background: running ? C.live : C.dead, boxShadow: running ? `0 0 7px ${C.live}` : "none" }} />
+              <span style={{ ...legend, fontSize: 13, fontWeight: 700, flex: 1 }}>{actor?.name || pumpId}</span>
+              <Tap on={running} color={C.live} pad="10px 18px" size={13}
+                onClick={() => post(`/api/actors/${pumpId}`, { mode: running ? "off" : "on" })}>
+                {running ? "Running" : "Off"}
+              </Tap>
+            </div>
+            <div style={{ ...legend, fontSize: 10.5, color: C.faint, marginBottom: 6 }}>Line — where the flow goes</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {pflows.map((f) => {
+                const active = f.id === routedId;
+                const col = f.kind === "water" ? C.glycol : C.live;
+                return (
+                  <Tap key={f.id} on={active} color={col} pad="12px 16px" size={13}
+                    onClick={() => post("/api/flows/route", { pump: pumpId, flowId: f.id })}>
+                    {shortLabel(f)}
+                  </Tap>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
