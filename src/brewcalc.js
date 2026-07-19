@@ -160,16 +160,19 @@ export function computeBackSolve(r) {
   const grains = (r?.grains || []).map((g) => ({ ...g, scaledLbs: +(((+g.lbs || 0) * scale)).toFixed(2) }));
   const grainLbs = grains.reduce((a, g) => a + g.scaledLbs, 0);
 
-  // water: total needed, then split mash vs sparge by mash thickness
+  // water: total needed, then split mash vs sparge by mash thickness.
+  // mash can't exceed the total (BIAB / no-sparge → all water in the mash),
+  // and sparge is whatever's left.
   const absorption = grainLbs * absorpPerLb;
-  const totalWater = preBoil + absorption + deadspace;
-  const mashWater = grainLbs * mashThick / 4;   // qt → gal
+  const totalWater = Math.max(0, preBoil + absorption + deadspace);
+  const mashWater = Math.min(Math.max(0, grainLbs * mashThick / 4), totalWater);
   const spargeWater = Math.max(0, totalWater - mashWater);
+  const noSparge = spargeWater < 0.05;
 
   return {
     kegTarget, dryHopOz, dryHopLoss, fermTrub, kettleLoss, boilOff, deadspace, absorption,
     fermenterVol, chilled, postBoilHot, preBoil, scale, grains, grainLbs,
-    totalWater, mashWater, spargeWater, mashThick,
+    totalWater, mashWater, spargeWater, mashThick, noSparge,
   };
 }
 
@@ -213,18 +216,22 @@ export function computeGravityPlan(r, measuredVol, measuredSG) {
  * Standard infusion formula: strike = target + (0.2/R)(target − grainT)
  * where R = qts water per lb grain, plus a tun/transfer loss allowance.
  * (0.2 is the grain:water specific-heat ratio constant.) */
+const num = (v, d) => (Number.isFinite(+v) ? +v : d); // safe number-or-default
+
 export function computeStrike(r) {
   const bs = computeBackSolve(r);
   const grainLbs = bs.grainLbs;
-  const grainT = +r?.water?.grainTempF || 68;
-  const lossF = +r?.water?.tunLossF ?? 2;
+  const grainT = num(r?.water?.grainTempF, 68);
+  const lossF = num(r?.water?.tunLossF, 2);
   // mash target = first rest step's target, else first mash-vessel target
   const steps = r?.steps || [];
   const rest = steps.find((s) => s.kind === "rest" && s.phase === "mash" && s.target);
   const target = rest?.target ?? steps.find((s) => s.phase === "mash" && s.target)?.target ?? 152;
-  if (!grainLbs) return { target, ratio: null, strikeF: null };
-  const R = bs.mashThick; // qt/lb — mash thickness IS the ratio
-  const strikeF = target + (0.2 / R) * (target - grainT) + lossF;
+  if (!grainLbs || !(bs.mashWater > 0)) return { target, ratio: null, strikeF: null };
+  // ratio = actual mash water (not nominal thickness) so BIAB/full-volume
+  // mashes compute the right strike temp too
+  const R = (bs.mashWater * 4) / grainLbs; // qt/lb
+  const strikeF = R > 0 ? target + (0.2 / R) * (target - grainT) + lossF : null;
   return { target, ratio: R, strikeF, grainLbs: bs.grainLbs, grainT, lossF, mashGal: bs.mashWater };
 }
 
