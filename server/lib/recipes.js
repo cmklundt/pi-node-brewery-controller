@@ -20,7 +20,7 @@
  *   alarm       true → at-temp / done fires an alert + buzzer + push
  */
 
-export const SEED_REV = 2;
+export const SEED_REV = 3;
 
 export function normalizeRecipe(r = {}) {
   return {
@@ -58,7 +58,7 @@ export function normalizeRecipe(r = {}) {
 export function creamsicleIPA() {
   return normalizeRecipe({
     name: "Creamsicle NE IPA",
-    rev: 2,
+    rev: 3,
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.050, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
@@ -85,9 +85,11 @@ export function creamsicleIPA() {
     // grams solved so the resulting profile lands on the sheet's result
     // (Ca 99 · Mg 22 · Na 24 · SO4 185) — the export garbled the sheet's
     // salt column headers, so these are derived, not transcribed
+    // Straight from the sheet's EZ-Water salt columns (Gypsum 0 · CaCl2 ·
+    // Epsom). Chloride-forward, as a NEIPA should be.
     salts: {
-      mash: [{ name: "Gypsum", g: 2.5 }, { name: "Calcium Chloride", g: 2.35 }, { name: "Epsom Salt", g: 2.8 }],
-      boil: [{ name: "Gypsum", g: 2.95 }, { name: "Calcium Chloride", g: 2.77 }, { name: "Epsom Salt", g: 3.3 }],
+      mash: [{ name: "Calcium Chloride", g: 4.5 }, { name: "Epsom Salt", g: 3.0 }],
+      boil: [{ name: "Calcium Chloride", g: 5.33 }, { name: "Epsom Salt", g: 3.56 }],
     },
     water: {
       // starting profile from the EZ Water tab (city water report)
@@ -122,7 +124,7 @@ export function creamsicleIPA() {
         ] },
       { phase: "mash", kind: "manual", name: "Add mash salts & check pH", vessel: "mash", target: 160,
         instructions: "Stir salts in, then measure mash pH. Target 5.2–5.4 — add 88% lactic acid 0.5 mL at a time (usually 1–2 mL total).",
-        ingredients: [{ name: "Gypsum", amount: "4.50 g" }, { name: "Calcium Chloride", amount: "3.00 g" }] },
+        ingredients: [{ name: "Calcium Chloride", amount: "4.50 g" }, { name: "Epsom Salt", amount: "3.00 g" }] },
       { phase: "mash", kind: "rest", name: "Saccharification rest", vessel: "mash", target: 160, mins: 90,
         instructions: "Single-infusion rest. Timer counts only while the mash is at temperature." },
       { phase: "mash", kind: "rest", name: "Mash out", vessel: "mash", target: 168, mins: 10,
@@ -137,7 +139,7 @@ export function creamsicleIPA() {
       { phase: "boil", kind: "ramp", name: "Bring to a boil", vessel: "boil", target: 212, autoAdvance: false,
         instructions: "Flip the interlock to BOIL and run the element at full power, lid off. Alarm at boil — silence and confirm." },
       { phase: "boil", kind: "manual", name: "Add boil salts",
-        ingredients: [{ name: "Gypsum", amount: "5.33 g" }, { name: "Calcium Chloride", amount: "3.56 g" }] },
+        ingredients: [{ name: "Calcium Chloride", amount: "5.33 g" }, { name: "Epsom Salt", amount: "3.56 g" }] },
       { phase: "boil", kind: "boil", name: "Boil", vessel: "boil", target: 212, mins: 60,
         instructions: "60-minute boil. Hop and Whirlfloc alarms fire at their times.",
         hops: [
