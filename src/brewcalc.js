@@ -13,7 +13,7 @@ export function parseWhenMin(when = "", boilMin = 60) {
   return m ? +m[1] : null;
 }
 
-export function computeRecipe(r) {
+export function computeRecipe(r, altitudeFt = 0) {
   const b = r?.batch || {};
   // OG is measured at the fermenter; when a keg target is set the fermenter
   // volume is derived from it (keg + trub + dry-hop absorption)
@@ -23,6 +23,8 @@ export function computeRecipe(r) {
     gal = (+b.kegTargetGal) + (+b.fermenterTrubGal || 0) + dryHopOz * (b.dryHopAbsorpGalPerOz ?? 0.0625);
   }
   const boilMin = +b.boilMin || 60;
+  // altitude cuts hop isomerization (cooler boil) — ~1.5%/1000 ft, an estimate
+  const altUtil = Math.max(0.6, 1 - 0.015 * ((+altitudeFt || 0) / 1000));
   const eff = (+r?.batch?.mashEffPct || 75) / 100;
   const preBoil = +r?.batch?.preBoilGal || gal + 1.5;
 
@@ -46,7 +48,7 @@ export function computeRecipe(r) {
     let ibu = null;
     if (min != null && +h.alphaPct > 0) {
       const util = (1.65 * Math.pow(0.000125, gb - 1) * (1 - Math.exp(-0.04 * min))) / 4.15;
-      ibu = ((+h.alphaPct / 100) * (+h.oz || 0) * 7490 / gal) * util;
+      ibu = ((+h.alphaPct / 100) * (+h.oz || 0) * 7490 / gal) * util * altUtil;
     }
     return { ...h, effMin: min, computedIbu: ibu };
   });
@@ -57,10 +59,26 @@ export function computeRecipe(r) {
     grains: grains.map((g) => ({ ...g, pct: totalPts ? (g.points / totalPts) * 100 : 0 })),
     hops,
     buGu: ogPts > 0 ? ibuTotal / ogPts : 0,
+    altUtil,
   };
 }
 
 export const fmtSG = (g) => (Number.isFinite(g) ? g.toFixed(3) : "—");
+
+/* ── altitude effects on the boil (mash is unaffected) ─────────── */
+export function computeAltitude(r, altitudeFt = 0) {
+  const alt = +altitudeFt || 0;
+  const bp = +(212 - 1.9 * (alt / 1000)).toFixed(1);
+  const utilLossPct = Math.round((0.015 * (alt / 1000)) * 100);
+  // DMS: worse with high-SMM base malts (Pilsner / pale lager). Match the
+  // base-malt spellings (pilsn/pilsen) so "Carapils" (a dextrin malt) is excluded.
+  const hasPils = (r?.grains || []).some((g) => /pilsn|pilsen|pale lager|light lager/i.test(g.name || ""));
+  const boilMin = +r?.batch?.boilMin || 60;
+  // suggest a longer boil at altitude, more so with Pilsner malt
+  const suggestBoilMin = alt < 2000 ? boilMin
+    : Math.max(boilMin, hasPils ? 90 : 75);
+  return { alt, bp, utilLossPct, hasPils, boilMin, suggestBoilMin, significant: alt >= 2000 };
+}
 
 /* ── beer color (Morey) ─────────────────────────────────────── */
 export function computeColor(r) {

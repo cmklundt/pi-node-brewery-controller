@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { C, legend, mono } from "../theme.js";
 import { Panel, Row, Tap, Note, Field, Big, Computed } from "../ui.jsx";
 import { put } from "../api.js";
-import { computeRecipe, computeColor, computeWater, computeStrike, computeBackSolve, fmtSG } from "../brewcalc.js";
+import { computeRecipe, computeColor, computeWater, computeStrike, computeBackSolve, computeAltitude, fmtSG } from "../brewcalc.js";
 import { GRAIN_DB, SALT_NAMES, IONS } from "../grainDB.js";
 import { HOP_DB } from "../hopDB.js";
 
@@ -53,7 +53,9 @@ export default function RecipeTab({ config, setConfig, state }) {
   const addTo = (key, tpl) => set({ [key]: [...(r[key] || []), tpl] });
   const dropFrom = (key, i) => set({ [key]: r[key].filter((_, j) => j !== i) });
 
-  const calc = computeRecipe(r);   // the spreadsheet's formulas, live
+  const altitudeFt = config?.altitudeFt || 0;
+  const calc = computeRecipe(r, altitudeFt);   // the spreadsheet's formulas, live (altitude-aware IBU)
+  const alt = computeAltitude(r, altitudeFt);
   const color = computeColor(r);
   const water = computeWater(r);
   const strike = computeStrike(r);
@@ -123,6 +125,36 @@ export default function RecipeTab({ config, setConfig, state }) {
           <WaterPlan back={back} r={r} draft={draft} setBatch={setBatch} onApply={applyWaterPlan} />
         </Panel>
       </div>
+
+      {/* ── altitude effects ── */}
+      {alt.significant && (
+        <div style={{ gridColumn: "1 / -1" }}>
+          <Panel title={`Altitude — ${alt.alt.toLocaleString()} ft`}
+            right={<span style={{ ...legend, fontSize: 10, color: C.faint }}>set in the Hardware tab</span>}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12 }}>
+              <div>
+                <div style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.live, marginBottom: 4 }}>✓ Mash — no change</div>
+                <div style={{ fontSize: 11.5, color: C.dim, lineHeight: 1.5 }}>
+                  Rests run below boiling; enzymes track actual temperature, not pressure. Brew the mash temps and times exactly as written.
+                </div>
+              </div>
+              <div>
+                <div style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.ember, marginBottom: 4 }}>Boil — adjusted</div>
+                <div style={{ fontSize: 11.5, color: C.dim, lineHeight: 1.5 }}>
+                  Water boils at <b style={{ color: C.glycol }}>{alt.bp}°F</b>. IBUs cut ~<b style={{ color: C.amber }}>{alt.utilLossPct}%</b> from slower isomerization (already in the IBU above).
+                </div>
+              </div>
+              <div>
+                <div style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.ember, marginBottom: 4 }}>Boil time</div>
+                <div style={{ fontSize: 11.5, color: C.dim, lineHeight: 1.5 }}>
+                  Consider <b style={{ color: C.text }}>{alt.suggestBoilMin} min</b> (vs {alt.boilMin}) — a cooler boil clears DMS slower.
+                  {alt.hasPils ? " Your Pilsner malt raises DMS risk — the longer boil matters here." : " Your base malts are low-DMS, so this is optional."}
+                </div>
+              </div>
+            </div>
+          </Panel>
+        </div>
+      )}
 
       {/* ── batch ── */}
       <Panel title={draft ? "Batch" : "Batch targets"}>
