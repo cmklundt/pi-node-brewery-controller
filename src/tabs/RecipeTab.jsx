@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { C, legend, mono } from "../theme.js";
 import { Panel, Row, Tap, Note, Field, Big, Computed } from "../ui.jsx";
 import { put } from "../api.js";
-import { computeRecipe, computeColor, computeWater, computeStrike, computeVolumes, fmtSG } from "../brewcalc.js";
+import { computeRecipe, computeColor, computeWater, computeStrike, computeVolumes, computeBackSolve, fmtSG } from "../brewcalc.js";
 import { GRAIN_DB, SALT_NAMES, IONS } from "../grainDB.js";
 import { HOP_DB } from "../hopDB.js";
 
@@ -58,6 +58,17 @@ export default function RecipeTab({ config, setConfig, state }) {
   const water = computeWater(r);
   const strike = computeStrike(r);
   const vol = computeVolumes(r);
+  const back = computeBackSolve(r);
+
+  // write the back-solved water + scaled grain into a draft for review + Save
+  function applyWaterPlan() {
+    const nr = JSON.parse(JSON.stringify(r));
+    nr.water = { ...nr.water, mashGal: +back.mashWater.toFixed(2), spargeGal: +back.spargeWater.toFixed(2) };
+    nr.batch = { ...nr.batch, sizeGal: +back.fermenterVol.toFixed(2), preBoilGal: +back.preBoil.toFixed(2) };
+    nr.grains = back.grains.map((g) => { const { scaledLbs, ...rest } = g; return { ...rest, lbs: scaledLbs }; });
+    setDraft(nr);
+    flash("Applied — review the grain bill & water, then Save");
+  }
 
   return (<>
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
@@ -106,11 +117,11 @@ export default function RecipeTab({ config, setConfig, state }) {
         </Panel>
       </div>
 
-      {/* ── volume balance: grain → keg ── */}
+      {/* ── water plan: keg target → required water & grain ── */}
       <div style={{ gridColumn: "1 / -1" }}>
-        <Panel title="Volume balance — grain to keg"
-          right={<span style={{ ...legend, fontSize: 10, color: C.faint }}>every loss from strike water to a filled keg</span>}>
-          <VolumeChain vol={vol} r={r} draft={draft} setBatch={setBatch} />
+        <Panel title="Water plan — sized to your keg"
+          right={<span style={{ ...legend, fontSize: 10, color: C.faint }}>back-solved up from the keg through every loss</span>}>
+          <WaterPlan back={back} r={r} draft={draft} setBatch={setBatch} onApply={applyWaterPlan} />
         </Panel>
       </div>
 
@@ -118,7 +129,7 @@ export default function RecipeTab({ config, setConfig, state }) {
       <Panel title={draft ? "Batch" : "Batch targets"}>
         {draft && <Field label="Recipe name" value={r.name} onChange={(v) => set({ name: v })} />}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          {[["sizeGal", "Batch (gal)"], ["boilMin", "Boil (min)"], ["preBoilGal", "Pre-boil (gal)"],
+          {[["sizeGal", "Fermenter (gal)"], ["boilMin", "Boil (min)"], ["preBoilGal", "Pre-boil (gal)"],
             ["ogTarget", "OG target"], ["fgTarget", "FG target"], ["abvTarget", "ABV %"],
             ["ibuTarget", "IBU"], ["mashEffPct", "Mash eff %"], ["spargeGal", "Sparge (gal)"]].map(([k, label]) => (
             draft
@@ -353,71 +364,105 @@ export default function RecipeTab({ config, setConfig, state }) {
   </>);
 }
 
-/* ── volume balance chain: strike → sparge → boil → fermenter → keg ── */
-function VolumeChain({ vol, r, draft, setBatch }) {
+/* ── water plan: back-solve keg target → required water & grain ── */
+function WaterPlan({ back, r, draft, setBatch, onApply }) {
   const g = (x) => x.toFixed(2);
-  const kegOk = vol.kegFillPct >= 96 && vol.kegFillPct <= 103;
-  const kegShort = vol.kegFillPct < 96;
+  const w = r?.water || {};
+  const applied = Math.abs((+w.mashGal || 0) - back.mashWater) < 0.05 && Math.abs((+w.spargeGal || 0) - back.spargeWater) < 0.05;
 
-  const Stage = ({ label, gal, note }) => (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "7px 0" }}>
-      <span style={{ ...legend, fontSize: 12, fontWeight: 700, color: C.text, flex: 1 }}>{label}</span>
-      {note && <span style={{ ...mono, fontSize: 10.5, color: C.faint }}>{note}</span>}
-      <span style={{ ...mono, fontSize: 16, color: C.glycol, width: 92, textAlign: "right" }}>{g(gal)}<span style={{ fontSize: 9.5, color: C.faint }}> gal</span></span>
+  const Stage = ({ label, gal, strong }) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: strong ? "9px 0 2px" : "6px 0" }}>
+      <span style={{ ...legend, fontSize: strong ? 13 : 12, fontWeight: 700, color: strong ? C.glycol : C.text, flex: 1 }}>{label}</span>
+      <span style={{ ...mono, fontSize: strong ? 18 : 15, color: C.glycol, width: 96, textAlign: "right" }}>{g(gal)}<span style={{ fontSize: 9.5, color: C.faint }}> gal</span></span>
     </div>
   );
-  const Loss = ({ label, amt }) => (
+  const Add = ({ label, amt }) => (
     <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "2px 0 2px 16px" }}>
-      <span style={{ ...mono, fontSize: 11, color: C.faint, flex: 1 }}>− {label}</span>
-      <span style={{ ...mono, fontSize: 12, color: C.ember, width: 92, textAlign: "right" }}>−{g(amt)}</span>
+      <span style={{ ...mono, fontSize: 11, color: C.faint, flex: 1 }}>+ {label}</span>
+      <span style={{ ...mono, fontSize: 12, color: C.amber, width: 96, textAlign: "right" }}>+{g(amt)}</span>
     </div>
   );
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: draft ? "1.4fr 1fr" : "1fr", gap: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 18 }}>
+      {/* keg target input + backward chain to required water */}
       <div>
-        <Stage label="Water in (mash + sparge)" gal={vol.waterIn} note={`${g(vol.mashGal)} + ${g(vol.spargeGal)}`} />
-        <Loss label={`grain absorption (${g(vol.grainLbs)} lb)`} amt={vol.absorp} />
-        <Loss label="mash-tun deadspace" amt={vol.deadspace} />
-        <Stage label="Pre-boil (into kettle)" gal={vol.preBoil} note={`sheet: ${r.batch?.preBoilGal ?? "—"}`} />
-        <Loss label="boil-off" amt={vol.boilLoss} />
-        <Stage label="Post-boil (hot)" gal={vol.postBoilHot} />
-        <Loss label="cooling shrink 4%" amt={vol.postBoilHot - vol.chilled} />
-        <Stage label="Chilled (68°F)" gal={vol.chilled} />
-        <Loss label="kettle trub + hop absorption" amt={vol.kettleLoss} />
-        <Stage label="Into fermenter" gal={vol.toFermenter} note={`batch: ${r.batch?.sizeGal ?? "—"}`} />
-        <Loss label="fermenter trub / yeast" amt={vol.fermTrub} />
-        <Loss label={`dry-hop absorption (${vol.dryHopOz} oz)`} amt={vol.dryHopLoss} />
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "10px 0 2px", marginTop: 4, borderTop: `1px solid ${C.rule}` }}>
-          <span style={{ ...legend, fontSize: 13, fontWeight: 700, color: kegOk ? C.live : C.amber, flex: 1 }}>Into keg</span>
-          <span style={{ ...mono, fontSize: 20, color: kegOk ? C.live : C.amber }}>{g(vol.toKeg)}<span style={{ fontSize: 11, color: C.faint }}> gal</span></span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, padding: "10px 12px", background: C.raised, borderRadius: 4, border: `1px solid ${C.glycol}66` }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.glycol }}>Keg target — the whole batch is sized to this</div>
+            <div style={{ ...mono, fontSize: 10.5, color: C.faint, marginTop: 2 }}>gallons of finished beer you want in the keg</div>
+          </div>
+          {draft
+            ? <div style={{ width: 110 }}><Field label="" type="number" value={r.batch?.kegTargetGal} onChange={(v) => setBatch("kegTargetGal", v)} /></div>
+            : <span style={{ ...mono, fontSize: 26, color: C.glycol }}>{g(back.kegTarget)}<span style={{ fontSize: 12, color: C.faint }}> gal</span></span>}
         </div>
-        <div style={{ ...mono, fontSize: 12, color: kegOk ? C.live : C.amber, marginTop: 4 }}>
-          → {vol.kegFillPct.toFixed(0)}% of a {vol.kegSize} gal keg
-          {kegShort && `  ·  ${g(vol.kegSize - vol.toKeg)} gal short of full`}
+
+        <Stage label="Keg target" gal={back.kegTarget} />
+        <Add label="fermenter trub / yeast" amt={back.fermTrub} />
+        <Add label={`dry-hop absorption (${back.dryHopOz} oz)`} amt={back.dryHopLoss} />
+        <Stage label="Into fermenter" gal={back.fermenterVol} />
+        <Add label="kettle trub + cooling shrink" amt={back.postBoilHot - back.fermenterVol} />
+        <Stage label="Post-boil (hot)" gal={back.postBoilHot} />
+        <Add label="boil-off" amt={back.boilOff} />
+        <Stage label="Pre-boil (into kettle)" gal={back.preBoil} />
+        <Add label={`grain absorption (${g(back.grainLbs)} lb)`} amt={back.absorption} />
+        <Add label="mash-tun deadspace" amt={back.deadspace} />
+        <Stage label="Total water needed" gal={back.totalWater} strong />
+      </div>
+
+      {/* the answer: mash + sparge water, scaled grain, apply */}
+      <div>
+        <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 8 }}>Weigh & measure for this batch</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+          <BigStat label="Mash water" v={g(back.mashWater)} unit="gal" c={C.glycol} />
+          <BigStat label="Sparge water" v={g(back.spargeWater)} unit="gal" c={C.glycol} />
+          <BigStat label="Grain bill" v={g(back.grainLbs)} unit="lb" c={C.amber} />
+          <BigStat label="Into fermenter" v={g(back.fermenterVol)} unit="gal" c={C.amber} />
         </div>
-        {kegShort && (
-          <div style={{ fontSize: 11, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>
-            Normal keg fill leaves headspace, so {vol.kegFillPct.toFixed(0)}% is drinkable-as-is. To brim a {vol.kegSize} gal keg,
-            scale the batch up ~{Math.round((vol.kegSize / vol.toKeg - 1) * 100)}% (bigger grain bill + proportionally more water),
-            or trim losses — the {vol.dryHopOz} oz of dry hops alone hold back {g(vol.dryHopLoss)} gal.
+
+        <div style={{ ...mono, fontSize: 11, color: C.dim, lineHeight: 1.7, padding: "8px 10px", background: C.bezel, borderRadius: 3, marginBottom: 10 }}>
+          {back.grains.map((gr) => (
+            <div key={gr.name} style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>{gr.name}</span>
+              <span style={{ color: C.text }}>{gr.scaledLbs} lb</span>
+            </div>
+          ))}
+        </div>
+
+        {draft ? (
+          <>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <Big onClick={onApply} color={applied ? C.dim : C.live}>{applied ? "Applied ✓" : "Apply to recipe"}</Big>
+            </div>
+            <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 6 }}>Tune to your system</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <Field label="Mash thickness (qt/lb)" type="number" value={r.batch?.mashThicknessQtPerLb} onChange={(v) => setBatch("mashThicknessQtPerLb", v)} />
+              <Field label="Grain absorption (gal/lb)" type="number" value={r.batch?.grainAbsorpGalPerLb} onChange={(v) => setBatch("grainAbsorpGalPerLb", v)} />
+              <Field label="Boil-off (gal)" type="number" value={r.batch?.boilLossGal} onChange={(v) => setBatch("boilLossGal", v)} />
+              <Field label="Cooling shrink (%)" type="number" value={r.batch?.coolShrinkPct} onChange={(v) => setBatch("coolShrinkPct", v)} />
+              <Field label="Kettle trub/hop (gal)" type="number" value={r.batch?.kettleLossGal} onChange={(v) => setBatch("kettleLossGal", v)} />
+              <Field label="Deadspace (gal)" type="number" value={r.batch?.deadspaceGal} onChange={(v) => setBatch("deadspaceGal", v)} />
+              <Field label="Fermenter trub (gal)" type="number" value={r.batch?.fermenterTrubGal} onChange={(v) => setBatch("fermenterTrubGal", v)} />
+              <Field label="Dry-hop absorb (gal/oz)" type="number" value={r.batch?.dryHopAbsorpGalPerOz} onChange={(v) => setBatch("dryHopAbsorpGalPerOz", v)} />
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 11.5, color: applied ? C.live : C.amber, lineHeight: 1.5 }}>
+            {applied
+              ? "✓ The recipe's water & grain match this keg target."
+              : "Recipe water/grain don't match this keg target yet. Tap Edit recipe → Apply to recipe to size them."}
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {draft && (
-        <div>
-          <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 6 }}>Loss constants (tune to your system)</div>
-          <Field label="Grain absorption (gal/lb)" type="number" value={r.batch?.grainAbsorpGalPerLb} onChange={(v) => setBatch("grainAbsorpGalPerLb", v)} />
-          <Field label="Mash-tun deadspace (gal)" type="number" value={r.batch?.deadspaceGal} onChange={(v) => setBatch("deadspaceGal", v)} />
-          <Field label="Boil-off (gal)" type="number" value={r.batch?.boilLossGal} onChange={(v) => setBatch("boilLossGal", v)} />
-          <Field label="Cooling shrink (%)" type="number" value={r.batch?.coolShrinkPct} onChange={(v) => setBatch("coolShrinkPct", v)} />
-          <Field label="Kettle trub/hop loss (gal)" type="number" value={r.batch?.kettleLossGal} onChange={(v) => setBatch("kettleLossGal", v)} />
-          <Field label="Fermenter trub/yeast (gal)" type="number" value={r.batch?.fermenterTrubGal} onChange={(v) => setBatch("fermenterTrubGal", v)} />
-          <Field label="Dry-hop absorption (gal/oz)" type="number" value={r.batch?.dryHopAbsorpGalPerOz} onChange={(v) => setBatch("dryHopAbsorpGalPerOz", v)} />
-          <Field label="Keg size (gal)" type="number" value={r.batch?.kegSizeGal} onChange={(v) => setBatch("kegSizeGal", v)} />
-        </div>
-      )}
+function BigStat({ label, v, unit, c }) {
+  return (
+    <div style={{ background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderLeft: `3px solid ${c}88`, borderRadius: 3, padding: "9px 11px" }}>
+      <div style={{ ...legend, fontSize: 10, fontWeight: 600, color: C.dim }}>ƒ {label}</div>
+      <div style={{ ...mono, fontSize: 19, color: c, marginTop: 3 }}>{v}<span style={{ fontSize: 10, color: C.faint }}> {unit}</span></div>
     </div>
   );
 }

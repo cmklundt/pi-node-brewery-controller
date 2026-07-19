@@ -14,8 +14,15 @@ export function parseWhenMin(when = "", boilMin = 60) {
 }
 
 export function computeRecipe(r) {
-  const gal = +r?.batch?.sizeGal || 5.5;
-  const boilMin = +r?.batch?.boilMin || 60;
+  const b = r?.batch || {};
+  // OG is measured at the fermenter; when a keg target is set the fermenter
+  // volume is derived from it (keg + trub + dry-hop absorption)
+  let gal = +b.sizeGal || 5.5;
+  if (b.kegTargetGal) {
+    const dryHopOz = (r?.hops || []).filter((h) => /dry/i.test(h.when || "")).reduce((a, h) => a + (+h.oz || 0), 0);
+    gal = (+b.kegTargetGal) + (+b.fermenterTrubGal || 0) + dryHopOz * (b.dryHopAbsorpGalPerOz ?? 0.0625);
+  }
+  const boilMin = +b.boilMin || 60;
   const eff = (+r?.batch?.mashEffPct || 75) / 100;
   const preBoil = +r?.batch?.preBoilGal || gal + 1.5;
 
@@ -100,6 +107,51 @@ export function computeVolumes(r) {
     preBoil, boilLoss, postBoilHot, chilled, kettleLoss, toFermenter,
     dryHopLoss, fermTrub: +b.fermenterTrubGal || 0, fermLoss, toKeg, kegSize,
     kegFillPct: kegSize > 0 ? (toKeg / kegSize) * 100 : 0,
+  };
+}
+
+/* ── back-solve: keg target → required water & grain ─────────────
+ * The keg is the anchor. Work UP through every loss to the strike +
+ * sparge water you must start with, and scale the grain bill so OG
+ * still lands on target at the (larger) fermenter volume. */
+export function computeBackSolve(r) {
+  const b = r?.batch || {};
+  const kegTarget = +b.kegTargetGal || 5;
+  const dryHopOz = (r?.hops || []).filter((h) => /dry/i.test(h.when || "")).reduce((a, h) => a + (+h.oz || 0), 0);
+  const dryHopLoss = dryHopOz * (b.dryHopAbsorpGalPerOz ?? 0.0625);
+  const fermTrub = +b.fermenterTrubGal || 0;
+  const kettleLoss = +b.kettleLossGal || 0;
+  const shrink = (+b.coolShrinkPct || 0) / 100;
+  const boilOff = +b.boilLossGal || 0;
+  const absorpPerLb = b.grainAbsorpGalPerLb ?? 0.125;
+  const deadspace = +b.deadspaceGal || 0;
+  const mashThick = +b.mashThicknessQtPerLb || 1.5;
+  const eff = (+b.mashEffPct || 75) / 100;
+  const ogT = +b.ogTarget || 1.05;
+
+  // volumes, working up from the keg
+  const fermenterVol = kegTarget + fermTrub + dryHopLoss;
+  const chilled = fermenterVol + kettleLoss;
+  const postBoilHot = shrink < 1 ? chilled / (1 - shrink) : chilled;
+  const preBoil = postBoilHot + boilOff;
+
+  // grain to hit OG target at the fermenter volume (keeps the bill's ratio)
+  const curPts = (r?.grains || []).reduce((a, g) => a + (+g.lbs || 0) * (((+g.ppg || 1.036) - 1) * 1000), 0);
+  const neededPts = (ogT - 1) * 1000 * fermenterVol / eff;
+  const scale = curPts > 0 ? neededPts / curPts : 1;
+  const grains = (r?.grains || []).map((g) => ({ ...g, scaledLbs: +(((+g.lbs || 0) * scale)).toFixed(2) }));
+  const grainLbs = grains.reduce((a, g) => a + g.scaledLbs, 0);
+
+  // water: total needed, then split mash vs sparge by mash thickness
+  const absorption = grainLbs * absorpPerLb;
+  const totalWater = preBoil + absorption + deadspace;
+  const mashWater = grainLbs * mashThick / 4;   // qt → gal
+  const spargeWater = Math.max(0, totalWater - mashWater);
+
+  return {
+    kegTarget, dryHopOz, dryHopLoss, fermTrub, kettleLoss, boilOff, deadspace, absorption,
+    fermenterVol, chilled, postBoilHot, preBoil, scale, grains, grainLbs,
+    totalWater, mashWater, spargeWater, mashThick,
   };
 }
 
