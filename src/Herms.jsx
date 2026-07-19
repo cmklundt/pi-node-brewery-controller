@@ -24,7 +24,7 @@ const STEEL_HI = "#4C5866";
 const WATER = "#3D5A6E";
 const WORT = "#8A5A28";
 
-export default function Herms({ config, state, onSelectVessel }) {
+export default function Herms({ config, state, onSelectVessel, targetLevels }) {
   if (!config || !state) return null;
   const vessels = config.vessels || [];
   const flows = config.flows || [];
@@ -61,7 +61,7 @@ export default function Herms({ config, state, onSelectVessel }) {
               levelGal={level(v)} glycolOn={on("glycolPump")} heatOn={on("fermentHeat")}
               onTap={() => onSelectVessel?.(v.id)} />
           : <Kettle key={v.id} x={i * VW + 26} v={v} tempR={temp(v)} targetF={target(v)}
-              levelGal={level(v)} elementDuty={duty(v.element)} elementOn={on(v.element)}
+              levelGal={level(v)} targetGal={targetLevels?.[v.id]} elementDuty={duty(v.element)} elementOn={on(v.element)}
               coil={v.graphic === "kettle-coil"} mash={v.kind === "mashtun"}
               boilF={state.boilingPointF ?? 212}
               onTap={() => onSelectVessel?.(v.id)} />
@@ -93,7 +93,7 @@ function kettleGeom(v, x) {
   return { x, W, H, top, cx: x + W / 2 };
 }
 
-function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, mash, boilF = 212, onTap }) {
+function Kettle({ x, v, tempR, targetF, levelGal, targetGal, elementDuty, elementOn, coil, mash, boilF = 212, onTap }) {
   const { W, H, top, cx } = kettleGeom(v, x);
   const tempF = tempR?.tempF;
   const fault = tempR?.fault;
@@ -102,6 +102,10 @@ function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, 
   const innerTop = top + 14, innerBot = FLOOR - 10;
   const liqH = (innerBot - innerTop) * frac;
   const liqY = innerBot - liqH;
+  // "stop here" target fill line (volume checkpoint)
+  const tFrac = targetGal != null ? Math.max(0, Math.min(1, targetGal / (v.volumeGal || 1))) : null;
+  const tY = tFrac != null ? innerBot - (innerBot - innerTop) * tFrac : null;
+  const atTarget = targetGal != null && (levelGal || 0) >= targetGal - 0.05;
 
   return (
     <g onClick={onTap} style={{ cursor: "pointer" }}>
@@ -160,6 +164,15 @@ function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, 
             style={elementOn ? { filter: `drop-shadow(0 0 5px ${C.ember})` } : undefined} />
           <text x={x + 27} y={FLOOR + 30} fill={C.faint} fontSize="11" style={legend}>ELEMENT</text>
           <text x={x + W - 10} y={FLOOR + 30} textAnchor="end" fill={C.faint} fontSize="11" style={mono}>{elementDuty}%</text>
+        </g>
+      )}
+      {/* volume checkpoint "stop here" line */}
+      {tY != null && (
+        <g>
+          <line x1={x + 4} x2={x + W - 4} y1={tY} y2={tY} stroke={atTarget ? C.live : C.amber} strokeWidth="2" strokeDasharray="6 4" />
+          <text x={x + W - 6} y={tY - 4} textAnchor="end" fill={atTarget ? C.live : C.amber} fontSize="10" style={legend}>
+            {atTarget ? "at target" : `stop ${targetGal.toFixed(1)}g`}
+          </text>
         </g>
       )}
       {/* label + temps */}

@@ -5,9 +5,16 @@ import { Read, Ring, Stepper, Tap, Big, Panel } from "../ui.jsx";
 import Herms from "../Herms.jsx";
 import Graph from "../Graph.jsx";
 import { post, get } from "../api.js";
+import { computeBackSolve } from "../brewcalc.js";
 
 const PHASE_LABEL = { mash: "Mash", boil: "Boil", transfer: "Transfer & Ferment" };
 const PHASE_COLOR = { mash: C.amber, boil: C.ember, transfer: C.glycol };
+
+// resolve a step's volume checkpoint to a target gallons + the loss-model rate
+export function checkpointTarget(recipe, stage) {
+  const b = computeBackSolve(recipe);
+  return { preBoil: b.preBoil, postBoil: b.postBoilHot, fermenter: b.fermenterVol, keg: b.kegTarget }[stage] ?? 0;
+}
 
 export default function BrewTab({ state, config }) {
   const [range, setRange] = useState(60);
@@ -24,9 +31,12 @@ export default function BrewTab({ state, config }) {
   const st = state.steps;
   const step = st.steps[st.active];
   const pumpOn = (state.activeFlows || []).includes("recirc"); // wort pump running + hose on the HERMS loop
+  // active step's volume target → a "stop here" line on the destination kettle
+  const targetLevels = step?.volumeCheck
+    ? { [step.volumeCheck.vessel]: checkpointTarget(config.recipe, step.volumeCheck.stage) } : null;
 
   return (<>
-    <Herms config={config} state={state} onSelectVessel={(id) => setSelVessel(id === selVessel ? null : id)} />
+    <Herms config={config} state={state} targetLevels={targetLevels} onSelectVessel={(id) => setSelVessel(id === selVessel ? null : id)} />
 
     {selVessel && (() => {
       const v = config.vessels.find((x) => x.id === selVessel);
@@ -183,6 +193,10 @@ function StepRunner({ state, config }) {
           </div>
         </div>
       </div>
+
+      {/* volume checkpoint — measure vs plan, correct, and stop the
+          transfer when the destination hits target */}
+      {step.volumeCheck && <VolumeCheck step={step} config={config} state={state} />}
 
       {/* pump routing this step expects — flags a mis-set line before you
           pump wort the wrong way; tap Set to apply */}
@@ -386,6 +400,74 @@ function PhaseSchedule({ st }) {
         })}
       </div>
     </Panel>
+  );
+}
+
+/* ── volume checkpoint on a step ──────────────────────────────
+ * Shows the planned target for a vessel, a live "stop transfer" alert
+ * when it's reached, and a measured-vs-target correction (top up if
+ * short, boil down or accept lower gravity if over). */
+function VolumeCheck({ step, config, state }) {
+  const [measured, setMeasured] = useState("");
+  const vc = step.volumeCheck;
+  const target = checkpointTarget(config.recipe, vc.stage);
+  const vessel = config.vessels.find((v) => v.id === vc.vessel);
+  const live = state.levels?.[vc.vessel] ?? 0;
+  const reached = live >= target - 0.05;
+  const m = parseFloat(measured);
+  const diff = Number.isFinite(m) ? m - target : null;
+  const b = config.recipe.batch || {};
+  const boilOffRate = (+b.boilLossGal || 0.7) / (+b.boilMin || 60); // gal/min
+  const stageLabel = { preBoil: "pre-boil (in the kettle)", postBoil: "post-boil", fermenter: "into the fermenter", keg: "into the keg" }[vc.stage] || vc.stage;
+
+  let advice = null, tone = C.dim;
+  if (diff != null) {
+    if (Math.abs(diff) <= 0.1) { advice = "On target — carry on."; tone = C.live; }
+    else if (diff < 0) {
+      tone = C.amber;
+      advice = vc.stage === "preBoil"
+        ? `Short by ${(-diff).toFixed(2)} gal. Add that much ~168°F water to the kettle — restores volume and OG.`
+        : `Short by ${(-diff).toFixed(2)} gal. Top up with sanitized/filtered water (dilutes gravity slightly).`;
+    } else {
+      tone = C.ember;
+      const extraMin = boilOffRate > 0 ? Math.round(diff / boilOffRate) : null;
+      advice = vc.stage === "preBoil"
+        ? `Over by ${diff.toFixed(2)} gal. Boil ~${extraMin} min longer to concentrate to volume, or accept a slightly lower OG.`
+        : `Over by ${diff.toFixed(2)} gal — you'll fill the keg with room to spare. Leave the extra or save it for another keg.`;
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 12, padding: "10px 12px", background: C.bezel, borderRadius: 3, border: `1px solid ${reached ? C.live : C.ruleSoft}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.dim }}>Volume check — {vessel?.name}, {stageLabel}</span>
+        <div style={{ flex: 1 }} />
+        <span style={{ ...mono, fontSize: 12, color: C.faint }}>target</span>
+        <span style={{ ...mono, fontSize: 16, color: C.glycol }}>{target.toFixed(2)}<span style={{ fontSize: 9.5, color: C.faint }}> gal</span></span>
+      </div>
+
+      {/* live fill vs target — the "stop transfer" signal */}
+      <div style={{ marginTop: 8 }}>
+        <div style={{ position: "relative", height: 8, background: C.dead, borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${Math.min(100, (live / Math.max(target, 0.1)) * 100)}%`, background: reached ? C.live : C.glycol, transition: "width .4s" }} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+          <span style={{ ...mono, fontSize: 10.5, color: C.faint }}>now {live.toFixed(2)} gal</span>
+          {reached
+            ? <span style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.live }}>✋ STOP — target reached</span>
+            : <span style={{ ...mono, fontSize: 10.5, color: C.amber }}>{(target - live).toFixed(2)} gal to go</span>}
+        </div>
+      </div>
+
+      {/* measured actual → correction */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+        <span style={{ ...legend, fontSize: 10.5, color: C.faint }}>measured actual</span>
+        <input type="number" value={measured} onChange={(e) => setMeasured(e.target.value)} placeholder="gal"
+          style={{ ...mono, width: 80, fontSize: 13, padding: "8px 8px", background: C.card, color: C.text, border: `1px solid ${C.rule}`, borderRadius: 3 }} />
+        {diff != null && <span style={{ ...mono, fontSize: 12, color: tone }}>{diff >= 0 ? "+" : ""}{diff.toFixed(2)} gal</span>}
+      </div>
+      {advice && <div style={{ fontSize: 11.5, color: tone, marginTop: 6, lineHeight: 1.5 }}>{advice}</div>}
+    </div>
   );
 }
 

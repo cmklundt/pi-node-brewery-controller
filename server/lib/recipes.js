@@ -20,7 +20,7 @@
  *   alarm       true → at-temp / done fires an alert + buzzer + push
  */
 
-export const SEED_REV = 4;
+export const SEED_REV = 5;
 
 export function normalizeRecipe(r = {}) {
   return {
@@ -54,6 +54,9 @@ export function normalizeRecipe(r = {}) {
       ingredients: s.ingredients || [],
       hops: s.hops || undefined,   // boil-step hop alarms [{at, name}]
       routes: s.routes || undefined, // expected pump routing {pumpId: flowId}
+      // volume checkpoint: measure a vessel vs the plan and correct
+      // stage ∈ preBoil | postBoil | fermenter | keg ; vessel = where to read it
+      volumeCheck: s.volumeCheck || undefined,
       alarm: s.alarm !== false,
     })),
   };
@@ -64,7 +67,7 @@ export function normalizeRecipe(r = {}) {
 export function creamsicleIPA() {
   return normalizeRecipe({
     name: "Creamsicle NE IPA",
-    rev: 4,
+    rev: 5,
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.050, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
@@ -138,7 +141,8 @@ export function creamsicleIPA() {
         ingredients: [{ name: "Sabro", amount: "0.5 oz" }] },
       { phase: "mash", kind: "rest", name: "Sparge → Boil kettle", vessel: "hlt", target: 168, mins: 45, autoAdvance: false,
         routes: { waterPump: "strike", wortPump: "sparge" },
-        instructions: "Fly-sparge — this is the wort transfer to the boil kettle. WATER pump runs HLT → Mash (168°F sparge water into the top); WORT pump runs Mash → Boil (runoff out the bottom, over your first-wort hops). Collect 6.95 gal total in the boil kettle (4.39 gal of sparge water). Match pump rates to keep 1–2 inches above the grain bed (binder-clip trick). Take a pre-boil sample for pH and gravity." },
+        volumeCheck: { stage: "preBoil", vessel: "boil" },
+        instructions: "Fly-sparge — this is the wort transfer to the boil kettle. WATER pump runs HLT → Mash (168°F sparge water into the top); WORT pump runs Mash → Boil (runoff out the bottom, over your first-wort hops). STOP sparging when the boil kettle hits the pre-boil target below. Match pump rates to keep 1–2 inches above the grain bed (binder-clip trick). Take a pre-boil sample for pH and gravity." },
 
       /* ── BOIL ── */
       { phase: "boil", kind: "ramp", name: "Bring to a boil", vessel: "boil", target: 212, autoAdvance: false,
@@ -160,7 +164,8 @@ export function creamsicleIPA() {
       { phase: "transfer", kind: "manual", name: "Set up transfer",
         instructions: "Hook up hoses for transfer through the counter-flow chiller. All conical valves closed. Run cold water through the chiller." },
       { phase: "transfer", kind: "manual", name: "Chill & transfer to fermenter", autoAdvance: false, routes: { wortPump: "transfer" },
-        instructions: "Set the wort pump line to Boil → Fermenter and pump the boil kettle through the counter-flow chiller into the conical, targeting 68°F. Take a sample: record OG and pH." },
+        volumeCheck: { stage: "fermenter", vessel: "ferm" },
+        instructions: "Set the wort pump line to Boil → Fermenter and pump the boil kettle through the counter-flow chiller into the conical, targeting 68°F. Stop when the fermenter hits the target below. Take a sample: record OG and pH." },
       { phase: "transfer", kind: "manual", name: "Oxygenate",
         instructions: "Sanitize the carb stone, attach to the racking port, connect O₂, open the racking valve 1–2 minutes (blow-off hose in sanitizer). Close, disconnect, sanitize the butterfly valve; clean the stone in PBW / blow out with CO₂." },
       { phase: "transfer", kind: "manual", name: "Pitch yeast",
