@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { C, legend, mono } from "../theme.js";
 import { Panel, Row, Tap, Note, Field, Big, Computed } from "../ui.jsx";
 import { put } from "../api.js";
-import { computeRecipe, computeColor, computeWater, computeStrike, computeVolumes, computeBackSolve, fmtSG } from "../brewcalc.js";
+import { computeRecipe, computeColor, computeWater, computeStrike, computeBackSolve, fmtSG } from "../brewcalc.js";
 import { GRAIN_DB, SALT_NAMES, IONS } from "../grainDB.js";
 import { HOP_DB } from "../hopDB.js";
 
@@ -57,17 +57,16 @@ export default function RecipeTab({ config, setConfig, state }) {
   const color = computeColor(r);
   const water = computeWater(r);
   const strike = computeStrike(r);
-  const vol = computeVolumes(r);
   const back = computeBackSolve(r);
 
-  // write the back-solved water + scaled grain into a draft for review + Save
+  // Water is always derived live; the only thing to commit is the grain
+  // bill scaled to hold OG at the keg-target volume.
   function applyWaterPlan() {
     const nr = JSON.parse(JSON.stringify(r));
-    nr.water = { ...nr.water, mashGal: +back.mashWater.toFixed(2), spargeGal: +back.spargeWater.toFixed(2) };
     nr.batch = { ...nr.batch, sizeGal: +back.fermenterVol.toFixed(2), preBoilGal: +back.preBoil.toFixed(2) };
     nr.grains = back.grains.map((g) => { const { scaledLbs, ...rest } = g; return { ...rest, lbs: scaledLbs }; });
     setDraft(nr);
-    flash("Applied — review the grain bill & water, then Save");
+    flash("Grain bill scaled to the keg target — review & Save");
   }
 
   return (<>
@@ -128,10 +127,10 @@ export default function RecipeTab({ config, setConfig, state }) {
       {/* ── batch ── */}
       <Panel title={draft ? "Batch" : "Batch targets"}>
         {draft && <Field label="Recipe name" value={r.name} onChange={(v) => set({ name: v })} />}
+        {/* targets only — keg size + all volumes live in the Water Plan */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          {[["sizeGal", "Fermenter (gal)"], ["boilMin", "Boil (min)"], ["preBoilGal", "Pre-boil (gal)"],
-            ["ogTarget", "OG target"], ["fgTarget", "FG target"], ["abvTarget", "ABV %"],
-            ["ibuTarget", "IBU"], ["mashEffPct", "Mash eff %"], ["spargeGal", "Sparge (gal)"]].map(([k, label]) => (
+          {[["ogTarget", "OG target"], ["fgTarget", "FG target"], ["abvTarget", "ABV %"],
+            ["ibuTarget", "IBU"], ["boilMin", "Boil (min)"], ["mashEffPct", "Mash eff %"]].map(([k, label]) => (
             draft
               ? <Field key={k} label={label} type="number" value={r.batch?.[k]} onChange={(v) => setBatch(k, v)} />
               : <Stat key={k} label={label} v={r.batch?.[k]} />
@@ -233,22 +232,29 @@ export default function RecipeTab({ config, setConfig, state }) {
                 onChange={(v) => set({ water: { ...r.water, source: { ...r.water?.source, [ion]: v } } })} />
             : <Stat key={ion} label={ion} v={r.water?.source?.[ion] ?? "—"} />)}
         </div>
+        {/* mash + sparge are DERIVED (Water Plan back-solve); shown here as
+            computed so the salt ppm reflects the real volumes */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
+          <div style={{ background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderLeft: `3px solid ${C.glycol}88`, borderRadius: 3, padding: "8px 10px" }}>
+            <div style={{ ...legend, fontSize: 9.5, color: C.dim }}>ƒ Mash water</div>
+            <div style={{ ...mono, fontSize: 15, color: C.glycol, marginTop: 2 }}>{back.mashWater.toFixed(2)}<span style={{ fontSize: 9, color: C.faint }}> gal</span></div>
+          </div>
+          <div style={{ background: C.bezel, border: `1px solid ${C.ruleSoft}`, borderLeft: `3px solid ${C.glycol}88`, borderRadius: 3, padding: "8px 10px" }}>
+            <div style={{ ...legend, fontSize: 9.5, color: C.dim }}>ƒ Sparge water</div>
+            <div style={{ ...mono, fontSize: 15, color: C.glycol, marginTop: 2 }}>{back.spargeWater.toFixed(2)}<span style={{ fontSize: 9, color: C.faint }}> gal</span></div>
+          </div>
           {draft ? <>
-            <Field label="Mash water (gal)" type="number" value={r.water?.mashGal} onChange={(v) => set({ water: { ...r.water, mashGal: v } })} />
-            <Field label="Sparge water (gal)" type="number" value={r.water?.spargeGal} onChange={(v) => set({ water: { ...r.water, spargeGal: v } })} />
             <Field label="Grain temp (°F)" type="number" value={r.water?.grainTempF} onChange={(v) => set({ water: { ...r.water, grainTempF: v } })} />
             <Field label="Tun/transfer loss (°F)" type="number" value={r.water?.tunLossF} onChange={(v) => set({ water: { ...r.water, tunLossF: v } })} />
           </> : <>
-            <Stat label="Mash water" v={`${r.water?.mashGal ?? "—"} gal`} />
-            <Stat label="Sparge water" v={`${r.water?.spargeGal ?? "—"} gal`} />
             <Stat label="Grain temp" v={`${r.water?.grainTempF ?? 68}°F`} />
             <Stat label="Tun loss" v={`${r.water?.tunLossF ?? 2}°F`} />
           </>}
         </div>
+        <Note>Mash water = grain × {(r.batch?.mashThicknessQtPerLb ?? 1.5)} qt/lb; sparge = total needed − mash. Both set by the Water Plan above — change mash thickness there to shift the split.</Note>
         {strike.strikeF != null && (
           <div style={{ ...mono, fontSize: 11.5, color: C.glycol, marginTop: 8, padding: "8px 10px", background: C.bezel, borderRadius: 3, borderLeft: `3px solid ${C.glycol}88` }}>
-            ƒ Strike: heat {r.water?.mashGal} gal to <b>{strike.strikeF.toFixed(1)}°F</b> ({strike.ratio.toFixed(2)} qt/lb, {strike.grainLbs.toFixed(1)} lb grain at {strike.grainT}°F, +{strike.lossF}°F tun loss) → mash lands at {strike.target}°F. Set your strike-water step target to this.
+            ƒ Strike: heat {back.mashWater.toFixed(2)} gal to <b>{strike.strikeF.toFixed(1)}°F</b> ({strike.ratio.toFixed(2)} qt/lb, {strike.grainLbs.toFixed(1)} lb grain at {strike.grainT}°F, +{strike.lossF}°F tun loss) → mash lands at {strike.target}°F.
           </div>
         )}
 
@@ -367,8 +373,8 @@ export default function RecipeTab({ config, setConfig, state }) {
 /* ── water plan: back-solve keg target → required water & grain ── */
 function WaterPlan({ back, r, draft, setBatch, onApply }) {
   const g = (x) => x.toFixed(2);
-  const w = r?.water || {};
-  const applied = Math.abs((+w.mashGal || 0) - back.mashWater) < 0.05 && Math.abs((+w.spargeGal || 0) - back.spargeWater) < 0.05;
+  const applied = (r.grains || []).length === back.grains.length
+    && back.grains.every((gr, i) => Math.abs((+r.grains[i].lbs || 0) - gr.scaledLbs) < 0.02);
 
   const Stage = ({ label, gal, strong }) => (
     <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: strong ? "9px 0 2px" : "6px 0" }}>

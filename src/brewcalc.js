@@ -160,18 +160,18 @@ export function computeBackSolve(r) {
  * where R = qts water per lb grain, plus a tun/transfer loss allowance.
  * (0.2 is the grain:water specific-heat ratio constant.) */
 export function computeStrike(r) {
-  const grainLbs = (r?.grains || []).reduce((a, g) => a + (+g.lbs || 0), 0);
-  const mashGal = +r?.water?.mashGal || 0;
+  const bs = computeBackSolve(r);
+  const grainLbs = bs.grainLbs;
   const grainT = +r?.water?.grainTempF || 68;
   const lossF = +r?.water?.tunLossF ?? 2;
   // mash target = first rest step's target, else first mash-vessel target
   const steps = r?.steps || [];
   const rest = steps.find((s) => s.kind === "rest" && s.phase === "mash" && s.target);
   const target = rest?.target ?? steps.find((s) => s.phase === "mash" && s.target)?.target ?? 152;
-  if (!grainLbs || !mashGal) return { target, ratio: null, strikeF: null };
-  const R = (mashGal * 4) / grainLbs; // qts per lb
+  if (!grainLbs) return { target, ratio: null, strikeF: null };
+  const R = bs.mashThick; // qt/lb — mash thickness IS the ratio
   const strikeF = target + (0.2 / R) * (target - grainT) + lossF;
-  return { target, ratio: R, strikeF, grainLbs, grainT, lossF };
+  return { target, ratio: R, strikeF, grainLbs: bs.grainLbs, grainT, lossF, mashGal: bs.mashWater };
 }
 
 /* ── water / salts (EZ Water model) ─────────────────────────── */
@@ -185,8 +185,11 @@ import { SALT_DB, IONS } from "./grainDB.js";
 export function computeWater(r) {
   const w = r?.water || {};
   const src = w.source || {};
-  const mashGal = +w.mashGal || 0;
-  const spargeGal = +w.spargeGal || 0;
+  // mash + sparge volumes are DERIVED from the keg back-solve, not stored:
+  // mash water = grain × thickness; sparge = total needed − mash
+  const bs = computeBackSolve(r);
+  const mashGal = bs.mashWater;
+  const spargeGal = bs.spargeWater;
   const totalGal = mashGal + spargeGal;
 
   const apply = (salts, gal) => {
