@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { C, legend, mono } from "../theme.js";
 import { Panel, Row, Tap, Note, Field, Big, Computed } from "../ui.jsx";
 import { put } from "../api.js";
-import { computeRecipe, computeColor, computeWater, computeStrike, fmtSG } from "../brewcalc.js";
+import { computeRecipe, computeColor, computeWater, computeStrike, computeVolumes, fmtSG } from "../brewcalc.js";
 import { GRAIN_DB, SALT_NAMES, IONS } from "../grainDB.js";
 import { HOP_DB } from "../hopDB.js";
 
@@ -57,6 +57,7 @@ export default function RecipeTab({ config, setConfig, state }) {
   const color = computeColor(r);
   const water = computeWater(r);
   const strike = computeStrike(r);
+  const vol = computeVolumes(r);
 
   return (<>
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
@@ -102,6 +103,14 @@ export default function RecipeTab({ config, setConfig, state }) {
             <SummaryStat label="Strike temp" v={strike.strikeF != null ? strike.strikeF.toFixed(1) + "°F" : "—"}
               target={strike.ratio ? `${strike.ratio.toFixed(2)} qt/lb → ${strike.target}°F mash` : null} />
           </div>
+        </Panel>
+      </div>
+
+      {/* ── volume balance: grain → keg ── */}
+      <div style={{ gridColumn: "1 / -1" }}>
+        <Panel title="Volume balance — grain to keg"
+          right={<span style={{ ...legend, fontSize: 10, color: C.faint }}>every loss from strike water to a filled keg</span>}>
+          <VolumeChain vol={vol} r={r} draft={draft} setBatch={setBatch} />
         </Panel>
       </div>
 
@@ -342,6 +351,75 @@ export default function RecipeTab({ config, setConfig, state }) {
       </div>
     </div>
   </>);
+}
+
+/* ── volume balance chain: strike → sparge → boil → fermenter → keg ── */
+function VolumeChain({ vol, r, draft, setBatch }) {
+  const g = (x) => x.toFixed(2);
+  const kegOk = vol.kegFillPct >= 96 && vol.kegFillPct <= 103;
+  const kegShort = vol.kegFillPct < 96;
+
+  const Stage = ({ label, gal, note }) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "7px 0" }}>
+      <span style={{ ...legend, fontSize: 12, fontWeight: 700, color: C.text, flex: 1 }}>{label}</span>
+      {note && <span style={{ ...mono, fontSize: 10.5, color: C.faint }}>{note}</span>}
+      <span style={{ ...mono, fontSize: 16, color: C.glycol, width: 92, textAlign: "right" }}>{g(gal)}<span style={{ fontSize: 9.5, color: C.faint }}> gal</span></span>
+    </div>
+  );
+  const Loss = ({ label, amt }) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "2px 0 2px 16px" }}>
+      <span style={{ ...mono, fontSize: 11, color: C.faint, flex: 1 }}>− {label}</span>
+      <span style={{ ...mono, fontSize: 12, color: C.ember, width: 92, textAlign: "right" }}>−{g(amt)}</span>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: draft ? "1.4fr 1fr" : "1fr", gap: 16 }}>
+      <div>
+        <Stage label="Water in (mash + sparge)" gal={vol.waterIn} note={`${g(vol.mashGal)} + ${g(vol.spargeGal)}`} />
+        <Loss label={`grain absorption (${g(vol.grainLbs)} lb)`} amt={vol.absorp} />
+        <Loss label="mash-tun deadspace" amt={vol.deadspace} />
+        <Stage label="Pre-boil (into kettle)" gal={vol.preBoil} note={`sheet: ${r.batch?.preBoilGal ?? "—"}`} />
+        <Loss label="boil-off" amt={vol.boilLoss} />
+        <Stage label="Post-boil (hot)" gal={vol.postBoilHot} />
+        <Loss label="cooling shrink 4%" amt={vol.postBoilHot - vol.chilled} />
+        <Stage label="Chilled (68°F)" gal={vol.chilled} />
+        <Loss label="kettle trub + hop absorption" amt={vol.kettleLoss} />
+        <Stage label="Into fermenter" gal={vol.toFermenter} note={`batch: ${r.batch?.sizeGal ?? "—"}`} />
+        <Loss label="fermenter trub / yeast" amt={vol.fermTrub} />
+        <Loss label={`dry-hop absorption (${vol.dryHopOz} oz)`} amt={vol.dryHopLoss} />
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "10px 0 2px", marginTop: 4, borderTop: `1px solid ${C.rule}` }}>
+          <span style={{ ...legend, fontSize: 13, fontWeight: 700, color: kegOk ? C.live : C.amber, flex: 1 }}>Into keg</span>
+          <span style={{ ...mono, fontSize: 20, color: kegOk ? C.live : C.amber }}>{g(vol.toKeg)}<span style={{ fontSize: 11, color: C.faint }}> gal</span></span>
+        </div>
+        <div style={{ ...mono, fontSize: 12, color: kegOk ? C.live : C.amber, marginTop: 4 }}>
+          → {vol.kegFillPct.toFixed(0)}% of a {vol.kegSize} gal keg
+          {kegShort && `  ·  ${g(vol.kegSize - vol.toKeg)} gal short of full`}
+        </div>
+        {kegShort && (
+          <div style={{ fontSize: 11, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>
+            Normal keg fill leaves headspace, so {vol.kegFillPct.toFixed(0)}% is drinkable-as-is. To brim a {vol.kegSize} gal keg,
+            scale the batch up ~{Math.round((vol.kegSize / vol.toKeg - 1) * 100)}% (bigger grain bill + proportionally more water),
+            or trim losses — the {vol.dryHopOz} oz of dry hops alone hold back {g(vol.dryHopLoss)} gal.
+          </div>
+        )}
+      </div>
+
+      {draft && (
+        <div>
+          <div style={{ ...legend, fontSize: 10.5, fontWeight: 600, color: C.dim, marginBottom: 6 }}>Loss constants (tune to your system)</div>
+          <Field label="Grain absorption (gal/lb)" type="number" value={r.batch?.grainAbsorpGalPerLb} onChange={(v) => setBatch("grainAbsorpGalPerLb", v)} />
+          <Field label="Mash-tun deadspace (gal)" type="number" value={r.batch?.deadspaceGal} onChange={(v) => setBatch("deadspaceGal", v)} />
+          <Field label="Boil-off (gal)" type="number" value={r.batch?.boilLossGal} onChange={(v) => setBatch("boilLossGal", v)} />
+          <Field label="Cooling shrink (%)" type="number" value={r.batch?.coolShrinkPct} onChange={(v) => setBatch("coolShrinkPct", v)} />
+          <Field label="Kettle trub/hop loss (gal)" type="number" value={r.batch?.kettleLossGal} onChange={(v) => setBatch("kettleLossGal", v)} />
+          <Field label="Fermenter trub/yeast (gal)" type="number" value={r.batch?.fermenterTrubGal} onChange={(v) => setBatch("fermenterTrubGal", v)} />
+          <Field label="Dry-hop absorption (gal/oz)" type="number" value={r.batch?.dryHopAbsorpGalPerOz} onChange={(v) => setBatch("dryHopAbsorpGalPerOz", v)} />
+          <Field label="Keg size (gal)" type="number" value={r.batch?.kegSizeGal} onChange={(v) => setBatch("kegSizeGal", v)} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function SummaryStat({ label, v, target, good }) {

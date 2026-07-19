@@ -69,6 +69,40 @@ const SRM_HEX = ["#FFE699", "#FFD878", "#FFCA5A", "#FFBF42", "#FBB123", "#F8A600
   "#5A0A02", "#560A05", "#520907", "#4C0505", "#470606", "#440607", "#3F0708", "#3B0607", "#36080A", "#23030A"];
 export const srmHex = (srm) => SRM_HEX[Math.max(0, Math.min(39, Math.round(srm) - 1))] || SRM_HEX[39];
 
+/* ── volume balance: strike → sparge → boil → fermenter → keg ─────
+ * Traces water through every loss so you can see whether the batch
+ * actually fills the keg. Loss constants live in batch (all editable).
+ * Grain absorption ~0.125 gal/lb, cooling shrink ~4%, kettle trub +
+ * hop absorption, fermenter trub/yeast + DRY-HOP absorption. */
+export function computeVolumes(r) {
+  const b = r?.batch || {}, w = r?.water || {};
+  const grainLbs = (r?.grains || []).reduce((a, g) => a + (+g.lbs || 0), 0);
+  const dryHopOz = (r?.hops || []).filter((h) => /dry/i.test(h.when || "")).reduce((a, h) => a + (+h.oz || 0), 0);
+
+  const mashGal = +w.mashGal || 0;
+  const spargeGal = +w.spargeGal || 0;
+  const waterIn = mashGal + spargeGal;
+  const absorp = grainLbs * (b.grainAbsorpGalPerLb ?? 0.125);
+  const deadspace = +b.deadspaceGal || 0;
+  const preBoil = Math.max(0, waterIn - absorp - deadspace);
+  const boilLoss = +b.boilLossGal || 0;
+  const postBoilHot = Math.max(0, preBoil - boilLoss);
+  const chilled = postBoilHot * (1 - (+b.coolShrinkPct || 0) / 100);
+  const kettleLoss = +b.kettleLossGal || 0;
+  const toFermenter = Math.max(0, chilled - kettleLoss);
+  // fermenter loss = base trub/yeast + dry-hop absorption (~0.06 gal/oz)
+  const dryHopLoss = dryHopOz * (b.dryHopAbsorpGalPerOz ?? 0.0625);
+  const fermLoss = (+b.fermenterTrubGal || 0) + dryHopLoss;
+  const toKeg = Math.max(0, toFermenter - fermLoss);
+  const kegSize = +b.kegSizeGal || 5;
+  return {
+    grainLbs, dryHopOz, mashGal, spargeGal, waterIn, absorp, deadspace,
+    preBoil, boilLoss, postBoilHot, chilled, kettleLoss, toFermenter,
+    dryHopLoss, fermTrub: +b.fermenterTrubGal || 0, fermLoss, toKeg, kegSize,
+    kegFillPct: kegSize > 0 ? (toKeg / kegSize) * 100 : 0,
+  };
+}
+
 /* ── strike water temperature ───────────────────────────────────
  * Standard infusion formula: strike = target + (0.2/R)(target − grainT)
  * where R = qts water per lb grain, plus a tun/transfer loss allowance.

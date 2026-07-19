@@ -29,6 +29,10 @@ export function normalizeRecipe(r = {}) {
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.05, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
+      // volume-balance loss model (all editable in the Recipe tab)
+      grainAbsorpGalPerLb: 0.125, deadspaceGal: 0.25, boilLossGal: 0.7,
+      coolShrinkPct: 4, kettleLossGal: 0.5,
+      fermenterTrubGal: 0.5, dryHopAbsorpGalPerOz: 0.0625, kegSizeGal: 5.0,
       ...(r.batch || {}),
     },
     grains: r.grains || [],
@@ -63,7 +67,7 @@ export function creamsicleIPA() {
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.050, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
-      boilLossGal: 0.7, fermenterLossGal: 0.75, spargeGal: 4.39,
+      spargeGal: 4.39,
     },
     // lbs back-computed from the sheet's per-grain gravity-unit column
     // (total ≈ 313 GU → OG 1.050 at 92% efficiency into 5.5 gal)
