@@ -5,7 +5,7 @@ import { Read, Ring, Stepper, Tap, Big, Panel } from "../ui.jsx";
 import Herms from "../Herms.jsx";
 import Graph from "../Graph.jsx";
 import { post, get } from "../api.js";
-import { computeBackSolve } from "../brewcalc.js";
+import { computeBackSolve, computeGravityPlan } from "../brewcalc.js";
 
 const PHASE_LABEL = { mash: "Mash", boil: "Boil", transfer: "Transfer & Ferment" };
 const PHASE_COLOR = { mash: C.amber, boil: C.ember, transfer: C.glycol };
@@ -408,45 +408,30 @@ function PhaseSchedule({ st }) {
  * when it's reached, and a measured-vs-target correction (top up if
  * short, boil down or accept lower gravity if over). */
 function VolumeCheck({ step, config, state }) {
-  const [measured, setMeasured] = useState("");
+  const [measVol, setMeasVol] = useState("");
+  const [measSG, setMeasSG] = useState("");
   const vc = step.volumeCheck;
   const target = checkpointTarget(config.recipe, vc.stage);
   const vessel = config.vessels.find((v) => v.id === vc.vessel);
   const live = state.levels?.[vc.vessel] ?? 0;
   const reached = live >= target - 0.05;
-  const m = parseFloat(measured);
-  const diff = Number.isFinite(m) ? m - target : null;
-  const b = config.recipe.batch || {};
-  const boilOffRate = (+b.boilLossGal || 0.7) / (+b.boilMin || 60); // gal/min
+  const gravityStage = vc.stage === "preBoil" || vc.stage === "postBoil";
   const stageLabel = { preBoil: "pre-boil (in the kettle)", postBoil: "post-boil", fermenter: "into the fermenter", keg: "into the keg" }[vc.stage] || vc.stage;
 
-  let advice = null, tone = C.dim;
-  if (diff != null) {
-    if (Math.abs(diff) <= 0.1) { advice = "On target — carry on."; tone = C.live; }
-    else if (diff < 0) {
-      tone = C.amber;
-      advice = vc.stage === "preBoil"
-        ? `Short by ${(-diff).toFixed(2)} gal. Add that much ~168°F water to the kettle — restores volume and OG.`
-        : `Short by ${(-diff).toFixed(2)} gal. Top up with sanitized/filtered water (dilutes gravity slightly).`;
-    } else {
-      tone = C.ember;
-      const extraMin = boilOffRate > 0 ? Math.round(diff / boilOffRate) : null;
-      advice = vc.stage === "preBoil"
-        ? `Over by ${diff.toFixed(2)} gal. Boil ~${extraMin} min longer to concentrate to volume, or accept a slightly lower OG.`
-        : `Over by ${diff.toFixed(2)} gal — you'll fill the keg with room to spare. Leave the extra or save it for another keg.`;
-    }
-  }
+  const mv = parseFloat(measVol), sg = parseFloat(measSG);
+  const gp = gravityStage && Number.isFinite(mv) && Number.isFinite(sg) ? computeGravityPlan(config.recipe, mv, sg) : null;
+  const volDiff = Number.isFinite(mv) ? mv - target : null;
 
   return (
     <div style={{ marginTop: 12, padding: "10px 12px", background: C.bezel, borderRadius: 3, border: `1px solid ${reached ? C.live : C.ruleSoft}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.dim }}>Volume check — {vessel?.name}, {stageLabel}</span>
         <div style={{ flex: 1 }} />
-        <span style={{ ...mono, fontSize: 12, color: C.faint }}>target</span>
+        <span style={{ ...mono, fontSize: 12, color: C.faint }}>plan</span>
         <span style={{ ...mono, fontSize: 16, color: C.glycol }}>{target.toFixed(2)}<span style={{ fontSize: 9.5, color: C.faint }}> gal</span></span>
       </div>
 
-      {/* live fill vs target — the "stop transfer" signal */}
+      {/* live fill vs plan — the "stop transfer" signal */}
       <div style={{ marginTop: 8 }}>
         <div style={{ position: "relative", height: 8, background: C.dead, borderRadius: 4, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${Math.min(100, (live / Math.max(target, 0.1)) * 100)}%`, background: reached ? C.live : C.glycol, transition: "width .4s" }} />
@@ -454,19 +439,48 @@ function VolumeCheck({ step, config, state }) {
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
           <span style={{ ...mono, fontSize: 10.5, color: C.faint }}>now {live.toFixed(2)} gal</span>
           {reached
-            ? <span style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.live }}>✋ STOP — target reached</span>
+            ? <span style={{ ...legend, fontSize: 11, fontWeight: 700, color: C.live }}>✋ STOP — plan volume reached</span>
             : <span style={{ ...mono, fontSize: 10.5, color: C.amber }}>{(target - live).toFixed(2)} gal to go</span>}
         </div>
       </div>
 
-      {/* measured actual → correction */}
+      {/* measured volume + gravity → GRAVITY-FIRST correction */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <span style={{ ...legend, fontSize: 10.5, color: C.faint }}>measured actual</span>
-        <input type="number" value={measured} onChange={(e) => setMeasured(e.target.value)} placeholder="gal"
-          style={{ ...mono, width: 80, fontSize: 13, padding: "8px 8px", background: C.card, color: C.text, border: `1px solid ${C.rule}`, borderRadius: 3 }} />
-        {diff != null && <span style={{ ...mono, fontSize: 12, color: tone }}>{diff >= 0 ? "+" : ""}{diff.toFixed(2)} gal</span>}
+        <span style={{ ...legend, fontSize: 10.5, color: C.faint }}>measured</span>
+        <input type="number" value={measVol} onChange={(e) => setMeasVol(e.target.value)} placeholder="gal"
+          style={{ ...mono, width: 70, fontSize: 13, padding: "8px 8px", background: C.card, color: C.text, border: `1px solid ${C.rule}`, borderRadius: 3 }} />
+        {gravityStage && <>
+          <span style={{ ...legend, fontSize: 10.5, color: C.faint }}>@ SG</span>
+          <input type="number" value={measSG} onChange={(e) => setMeasSG(e.target.value)} placeholder="1.0__"
+            style={{ ...mono, width: 84, fontSize: 13, padding: "8px 8px", background: C.card, color: C.text, border: `1px solid ${C.rule}`, borderRadius: 3 }} />
+        </>}
+        {volDiff != null && <span style={{ ...mono, fontSize: 12, color: Math.abs(volDiff) < 0.1 ? C.live : C.amber }}>{volDiff >= 0 ? "+" : ""}{volDiff.toFixed(2)} gal vs plan</span>}
       </div>
-      {advice && <div style={{ fontSize: 11.5, color: tone, marginTop: 6, lineHeight: 1.5 }}>{advice}</div>}
+
+      {/* gravity-first recommendation */}
+      {gp && (
+        <div style={{ marginTop: 8, padding: "8px 10px", background: C.card, borderRadius: 3, borderLeft: `3px solid ${C.live}` }}>
+          <div style={{ ...legend, fontSize: 10, fontWeight: 700, color: C.live, marginBottom: 4 }}>Hit your OG — don't dilute</div>
+          <div style={{ fontSize: 11.5, color: C.text, lineHeight: 1.55 }}>
+            {gp.boilOffToOg > 0.05
+              ? <>Boil off <b style={{ color: C.glycol }}>{gp.boilOffToOg.toFixed(2)} gal</b> more (to {gp.postBoilForOg.toFixed(2)} gal post-boil) to land on OG {(+config.recipe.batch.ogTarget).toFixed(3)}.</>
+              : gp.boilOffToOg < -0.05
+                ? <>You're already below the OG volume — you have <b style={{ color: C.amber }}>more sugar than planned</b>. Add up to {(-gp.boilOffToOg).toFixed(2)} gal water to reach OG at a fuller batch, or boil as-is for a higher OG.</>
+                : <>Right on — boil as planned.</>}
+          </div>
+          <div style={{ ...mono, fontSize: 11, color: C.dim, marginTop: 5 }}>
+            → yields <b style={{ color: gp.kegShortfall > 0.05 ? C.amber : C.live }}>{gp.kegAtOg.toFixed(2)} gal to keg</b> at target OG
+            {gp.kegShortfall > 0.05 && ` (${gp.kegShortfall.toFixed(2)} gal shy of full — take it; beats a watered-down beer)`}
+            {gp.kegShortfall < -0.05 && ` (${(-gp.kegShortfall).toFixed(2)} gal over a full keg — bonus)`}
+          </div>
+          <div style={{ fontSize: 10.5, color: C.faint, marginTop: 4 }}>
+            Boil to plan volume instead → OG {gp.ogIfPlanned.toFixed(3)} (vs target {(+config.recipe.batch.ogTarget).toFixed(3)}).
+          </div>
+        </div>
+      )}
+      {gravityStage && !gp && Number.isFinite(mv) && (
+        <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>Enter the measured gravity too for the gravity-first call.</div>
+      )}
     </div>
   );
 }

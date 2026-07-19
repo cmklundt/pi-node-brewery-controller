@@ -155,6 +155,42 @@ export function computeBackSolve(r) {
   };
 }
 
+/* ── gravity-first correction at a checkpoint ────────────────────
+ * You measured actual volume + gravity. Sugar (gravity-units) is fixed;
+ * boiling only concentrates it. So the honest question isn't "how do I
+ * hit my volume" but "boil to what volume to hit OG" — accepting a
+ * smaller batch beats diluting a beer below target. */
+export function computeGravityPlan(r, measuredVol, measuredSG) {
+  const b = r?.batch || {};
+  const points = (measuredSG - 1) * 1000;
+  if (!(measuredVol > 0) || !(points > 0)) return null;
+  const gu = measuredVol * points;                       // gravity-units in the kettle now
+  const ogPts = ((+b.ogTarget || 1.05) - 1) * 1000;
+
+  // boil to this post-boil volume to land exactly on OG
+  const postBoilForOg = gu / ogPts;
+  const shrink = (+b.coolShrinkPct || 0) / 100;
+  const dryHopOz = (r?.hops || []).filter((h) => /dry/i.test(h.when || "")).reduce((a, h) => a + (+h.oz || 0), 0);
+  const dryHopLoss = dryHopOz * (b.dryHopAbsorpGalPerOz ?? 0.0625);
+  const toFermenter = postBoilForOg * (1 - shrink) - (+b.kettleLossGal || 0);
+  const kegAtOg = toFermenter - (+b.fermenterTrubGal || 0) - dryHopLoss;
+
+  // if instead you boil to the ORIGINAL plan volume, what OG do you get?
+  const bs = computeBackSolve(r);
+  const ogIfPlanned = 1 + (gu / bs.postBoilHot) / 1000;
+  // to keg full volume at target OG you'd need this much water added (dilution)
+  const kegTarget = +b.kegTargetGal || 5;
+  const guForFullKeg = ogPts * (bs.postBoilHot); // GU needed to fill plan at OG
+  const shortGU = guForFullKeg - gu;             // >0 means you're short on sugar
+
+  return {
+    gu, points, postBoilForOg, kegAtOg, ogIfPlanned, kegTarget,
+    boilOffToOg: measuredVol - postBoilForOg,    // gal to boil off from now to hit OG
+    kegShortfall: kegTarget - kegAtOg,           // how much less than a full keg
+    shortOnSugar: shortGU > 0,
+  };
+}
+
 /* ── strike water temperature ───────────────────────────────────
  * Standard infusion formula: strike = target + (0.2/R)(target − grainT)
  * where R = qts water per lb grain, plus a tun/transfer loss allowance.
