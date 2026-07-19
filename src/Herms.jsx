@@ -122,10 +122,10 @@ function Kettle({ x, v, tempR, targetF, levelGal, elementDuty, elementOn, coil, 
       )}
       {/* mash bed */}
       {mash && frac > 0.05 && <rect x={x + 10} y={Math.max(liqY + 8, FLOOR - 60)} width={W - 20} height={Math.min(44, innerBot - liqY - 8)} rx="4" fill="#3A2C1C" opacity=".85" />}
-      {/* HERMS coil */}
+      {/* HERMS coil — sits above the element (raised to clear it) */}
       {coil && (
         <g stroke={C.glycol} strokeWidth="3" fill="none" opacity="0.8">
-          {[0, 1, 2].map((i) => <ellipse key={i} cx={cx} cy={FLOOR - 52 + i * 13} rx="46" ry="6.5" />)}
+          {[0, 1, 2].map((i) => <ellipse key={i} cx={cx} cy={FLOOR - 98 + i * 15} rx="46" ry="6.5" />)}
         </g>
       )}
       {/* steam near the LOCAL boiling point (altitude-aware) */}
@@ -259,18 +259,15 @@ function FlowPath({ flow, rail, vessels, slot, running, pumpActor }) {
 
   const dir = selfLoop ? 1 : (V ? V.cx : T.cx) >= F.cx ? 1 : -1; // toward destination
 
-  // read-only schematic — pump on/off + line routing live in the vessel
-  // cards below; here the pump just shows state and flow direction
+  // read-only schematic — pump on/off + line routing (and their labels)
+  // live in the vessel cards below; the diagram just shows the active
+  // pipe, the pump, and flow direction
   return (
     <g>
       {seg.map((d, i) => <path key={i} d={d} {...pipe} {...dash} />)}
       <circle cx={pumpX} cy={rail} r="14" fill={C.bezel} stroke={running ? C.live : C.rule} strokeWidth="2" />
       <path d={`M ${pumpX - 6 * dir} ${rail - 7} L ${pumpX + 8 * dir} ${rail} L ${pumpX - 6 * dir} ${rail + 7} Z`}
         fill={running ? C.live : C.faint} style={running ? { filter: `drop-shadow(0 0 4px ${C.live})` } : undefined} />
-      <text x={pumpX + 22} y={rail + 4} fill={running ? C.live : C.faint} fontSize="11" style={legend}
-        stroke={C.card} strokeWidth="3" paintOrder="stroke">
-        {(pumpActor?.name || "PUMP").toUpperCase()} {running ? "ON" : "OFF"} → {flow.name.toUpperCase()}
-      </text>
     </g>
   );
 }
