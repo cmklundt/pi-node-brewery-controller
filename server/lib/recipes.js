@@ -20,7 +20,7 @@
  *   alarm       true → at-temp / done fires an alert + buzzer + push
  */
 
-export const SEED_REV = 3;
+export const SEED_REV = 4;
 
 export function normalizeRecipe(r = {}) {
   return {
@@ -48,6 +48,7 @@ export function normalizeRecipe(r = {}) {
       instructions: s.instructions || "",
       ingredients: s.ingredients || [],
       hops: s.hops || undefined,   // boil-step hop alarms [{at, name}]
+      routes: s.routes || undefined, // expected pump routing {pumpId: flowId}
       alarm: s.alarm !== false,
     })),
   };
@@ -58,7 +59,7 @@ export function normalizeRecipe(r = {}) {
 export function creamsicleIPA() {
   return normalizeRecipe({
     name: "Creamsicle NE IPA",
-    rev: 3,
+    rev: 4,
     batch: {
       sizeGal: 5.5, boilMin: 60, ogTarget: 1.050, fgTarget: 1.014,
       abvTarget: 4.7, ibuTarget: 70, mashEffPct: 92, preBoilGal: 6.95,
@@ -82,11 +83,9 @@ export function creamsicleIPA() {
       { name: "Sabro", oz: 2.0, alphaPct: 15.8, when: "dry hop day 1" },
       { name: "Sabro", oz: 2.0, alphaPct: 9.4, when: "dry hop day 3 (yeast dump)" },
     ],
-    // grams solved so the resulting profile lands on the sheet's result
-    // (Ca 99 · Mg 22 · Na 24 · SO4 185) — the export garbled the sheet's
-    // salt column headers, so these are derived, not transcribed
     // Straight from the sheet's EZ-Water salt columns (Gypsum 0 · CaCl2 ·
-    // Epsom). Chloride-forward, as a NEIPA should be.
+    // Epsom). Resulting profile is chloride-forward (Cl:SO4 ≈ 2), as a
+    // NEIPA should be.
     salts: {
       mash: [{ name: "Calcium Chloride", g: 4.5 }, { name: "Epsom Salt", g: 3.0 }],
       boil: [{ name: "Calcium Chloride", g: 5.33 }, { name: "Epsom Salt", g: 3.56 }],
@@ -105,14 +104,14 @@ export function creamsicleIPA() {
       /* ── MASH ── */
       { phase: "mash", kind: "manual", name: "Fill HLT with 10 gal",
         instructions: "Fill the HLT to 10 gallons (0% distilled). Add 250 mg potassium metabisulphite." },
-      { phase: "mash", kind: "manual", name: "Start HLT recirculation",
+      { phase: "mash", kind: "manual", name: "Start HLT recirculation", routes: { waterPump: "hlt-loop" },
         instructions: "Hook up the water pump to circulate the HLT and switch the pump outlet on. Lid on." },
       { phase: "mash", kind: "ramp", name: "Heat strike water", vessel: "hlt", target: 162,
         autoAdvance: false, instructions: "HLT element heats to strike temperature. Alarm sounds at temp — silence it and continue." },
-      { phase: "mash", kind: "manual", name: "Transfer strike water", vessel: "hlt", target: 162,
-        instructions: "Switch the HLT in-hose to the mash tun (lid on) and transfer. Then restore the HLT to 10 gallons. (HLT holds 162°F while you work.)" },
-      { phase: "mash", kind: "manual", name: "Connect recirc hoses", vessel: "hlt", target: 162,
-        instructions: "Connect the wort circulation hoses/pump and reconnect HLT circulation. Turn both pumps on." },
+      { phase: "mash", kind: "manual", name: "Transfer strike water", vessel: "hlt", target: 162, routes: { waterPump: "strike" },
+        instructions: "Switch the water pump line to HLT → Mash and transfer the strike water. Then restore the HLT to 10 gallons. (HLT holds 162°F while you work.)" },
+      { phase: "mash", kind: "manual", name: "Connect recirc hoses", vessel: "hlt", target: 162, routes: { waterPump: "hlt-loop", wortPump: "recirc" },
+        instructions: "Reconnect the water pump to HLT circulation and set the wort pump to the mash recirc loop. Turn both pumps on." },
       { phase: "mash", kind: "ramp", name: "Mash-in temperature", vessel: "mash", target: 160,
         autoAdvance: false, instructions: "HERMS brings HLT and mash tun to mash-in temp before the grain goes in." },
       { phase: "mash", kind: "manual", name: "Add grains", vessel: "mash", target: 160,
@@ -132,8 +131,9 @@ export function creamsicleIPA() {
       { phase: "mash", kind: "manual", name: "First wort hops", vessel: "hlt", target: 168,
         instructions: "Add first-wort hops to the boil kettle before sparging. (HLT holds sparge temp.)",
         ingredients: [{ name: "Sabro", amount: "0.5 oz" }] },
-      { phase: "mash", kind: "rest", name: "Sparge", vessel: "hlt", target: 168, mins: 45, autoAdvance: false,
-        instructions: "Hook up hoses/pumps for sparge into the boil kettle — 4.39 gal sparge water, 6.95 gal total pre-boil. Match pump rates to keep 1–2 inches of water above the grain bed. Take a pre-boil wort sample for pH and gravity." },
+      { phase: "mash", kind: "rest", name: "Sparge → Boil kettle", vessel: "hlt", target: 168, mins: 45, autoAdvance: false,
+        routes: { waterPump: "strike", wortPump: "sparge" },
+        instructions: "Fly-sparge — this is the wort transfer to the boil kettle. WATER pump runs HLT → Mash (168°F sparge water into the top); WORT pump runs Mash → Boil (runoff out the bottom, over your first-wort hops). Collect 6.95 gal total in the boil kettle (4.39 gal of sparge water). Match pump rates to keep 1–2 inches above the grain bed (binder-clip trick). Take a pre-boil sample for pH and gravity." },
 
       /* ── BOIL ── */
       { phase: "boil", kind: "ramp", name: "Bring to a boil", vessel: "boil", target: 212, autoAdvance: false,
@@ -154,8 +154,8 @@ export function creamsicleIPA() {
       /* ── TRANSFER & FERMENT ── */
       { phase: "transfer", kind: "manual", name: "Set up transfer",
         instructions: "Hook up hoses for transfer through the counter-flow chiller. All conical valves closed. Run cold water through the chiller." },
-      { phase: "transfer", kind: "manual", name: "Chill & transfer to fermenter", autoAdvance: false,
-        instructions: "Pump the boil kettle through the counter-flow chiller into the conical, targeting 68°F. Take a sample: record OG and pH." },
+      { phase: "transfer", kind: "manual", name: "Chill & transfer to fermenter", autoAdvance: false, routes: { wortPump: "transfer" },
+        instructions: "Set the wort pump line to Boil → Fermenter and pump the boil kettle through the counter-flow chiller into the conical, targeting 68°F. Take a sample: record OG and pH." },
       { phase: "transfer", kind: "manual", name: "Oxygenate",
         instructions: "Sanitize the carb stone, attach to the racking port, connect O₂, open the racking valve 1–2 minutes (blow-off hose in sanitizer). Close, disconnect, sanitize the butterfly valve; clean the stone in PBW / blow out with CO₂." },
       { phase: "transfer", kind: "manual", name: "Pitch yeast",

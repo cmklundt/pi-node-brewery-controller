@@ -184,6 +184,37 @@ function StepRunner({ state, config }) {
         </div>
       </div>
 
+      {/* pump routing this step expects — flags a mis-set line before you
+          pump wort the wrong way; tap Set to apply */}
+      {step.routes && (() => {
+        const flows = config.flows || [];
+        const vessels = config.vessels || [];
+        const fname = (fid) => flows.find((f) => f.id === fid)?.name || fid;
+        const pname = (pid) => config.actors.find((a) => a.id === pid)?.name || pid;
+        const entries = Object.entries(step.routes);
+        const wrong = entries.filter(([pump, fid]) => (state.routes?.[pump] ?? flows.find((f) => f.pump === pump)?.id) !== fid);
+        const ok = wrong.length === 0;
+        return (
+          <div style={{ marginTop: 12, padding: "9px 12px", background: C.bezel, borderRadius: 3, border: `1px solid ${ok ? C.ruleSoft : C.amber}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ ...legend, fontSize: 10.5, fontWeight: 700, color: ok ? C.live : C.amber }}>
+                {ok ? "✓ pumps routed for this step" : "⚠ check pump routing"}
+              </span>
+              <div style={{ flex: 1 }} />
+              {!ok && (
+                <Tap color={C.amber} pad="8px 14px" size={11}
+                  onClick={() => entries.forEach(([pump, fid]) => post("/api/flows/route", { pump, flowId: fid }))}>
+                  Set lines
+                </Tap>
+              )}
+            </div>
+            <div style={{ ...mono, fontSize: 10.5, color: C.dim, marginTop: 5, lineHeight: 1.5 }}>
+              {entries.map(([pump, fid]) => `${pname(pump)} → ${fname(fid)}`).join("  ·  ")}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* live duty cycle of whichever element this step drives (HERMS:
           mash steps drive the HLT element), with Auto/Manual override.
           Boil steps keep their own richer panel below — no toggle here. */}
