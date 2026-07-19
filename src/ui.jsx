@@ -2,7 +2,7 @@
 import React from "react";
 import { C, legend, mono, clamp } from "./theme.js";
 
-export function Read({ label, v, on, c, sub, bar, warn, fault }) {
+export function Read({ label, v, on, c, sub, bar, warn, fault, footer }) {
   return (
     <div style={{ background: C.card, border: `1px solid ${fault ? C.ember : on ? c : C.rule}`, borderRadius: 4, padding: 12, position: "relative", overflow: "hidden" }}>
       {on && <div style={{ position: "absolute", inset: 0, background: c, opacity: .055 }} />}
@@ -17,6 +17,7 @@ export function Read({ label, v, on, c, sub, bar, warn, fault }) {
           </div>
         )}
         <div style={{ ...legend, fontSize: 11, color: fault ? C.ember : warn ? C.ember : C.faint, marginTop: 7 }}>{fault ? "RTD FAULT — check probe" : sub}</div>
+        {footer}
       </div>
     </div>
   );

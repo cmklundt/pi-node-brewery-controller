@@ -28,8 +28,6 @@ export default function BrewTab({ state, config }) {
   return (<>
     <Herms config={config} state={state} onSelectVessel={(id) => setSelVessel(id === selVessel ? null : id)} />
 
-    <PumpRoutes config={config} state={state} />
-
     {selVessel && (() => {
       const v = config.vessels.find((x) => x.id === selVessel);
       if (!v) return null;
@@ -49,19 +47,22 @@ export default function BrewTab({ state, config }) {
       );
     })()}
 
-    {/* readouts */}
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10, margin: "12px 0" }}>
+    {/* readouts — each vessel card also hosts the pump(s) whose source is
+        that vessel (on/off + line selector), so control lives with the tank */}
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 10, margin: "12px 0", alignItems: "start" }}>
       {config.vessels.map((v) => {
         const r = state.temps[v.sensor];
         const d = v.element ? state.duties[v.element] || 0 : undefined;
         const colors = { hlt: C.amber, mash: C.live, boil: C.ember, ferm: C.glycol };
         const on = v.element ? d > 0 : v.id === "ferm" && state.fermState !== "idle";
+        const homedPumps = pumpsForVessel(config, v.id);
         return <Read key={v.id} label={v.name} v={r?.tempF} fault={r?.fault} on={on}
           c={colors[v.id] || C.amber} bar={d}
           sub={v.element ? `${config.actors.find((a) => a.id === v.element)?.name || ""} · ${d}%`
             : v.kind === "mashtun" ? (pumpOn ? "coil · recirculating" : "coil · pump off")
             : v.id === "ferm" ? state.fermState : ""}
-          warn={v.kind === "mashtun" && !pumpOn} />;
+          warn={v.kind === "mashtun" && !pumpOn}
+          footer={homedPumps.length > 0 && <PumpFooter config={config} state={state} pumps={homedPumps} />} />;
       })}
     </div>
 
@@ -357,55 +358,55 @@ function PhaseSchedule({ st }) {
   );
 }
 
-/* ── pump line selectors (under the kettles) ──────────────────
- * One card per physical pump: an on/off button, then a segmented
- * toggle of that pump's possible destinations. Tap the line you want —
- * no fiddling with the little valve on the diagram. This is the same
- * routing the diagram's valve drives; they stay in sync. */
-function PumpRoutes({ config, state }) {
+/* ── pump controls, hosted inside a vessel readout card ───────
+ * A pump lives on the card of its source vessel (water pump → HLT,
+ * wort pump → Mash). Shows on/off + a line selector so you tap the
+ * destination you want — no fiddling with the little diagram valve. */
+export function pumpsForVessel(config, vesselId) {
+  const flows = config.flows || [];
+  return (config.actors || []).filter((a) => a.role === "pump").filter((a) => {
+    const home = a.homeVessel ?? flows.find((f) => f.pump === a.id)?.from;
+    return home === vesselId;
+  });
+}
+
+function PumpFooter({ config, state, pumps }) {
   const flows = config.flows || [];
   const vessels = config.vessels || [];
-  const pumps = [...new Set(flows.map((f) => f.pump))];
-  if (!pumps.length) return null;
-
   const vn = (id) => vessels.find((v) => v.id === id)?.name || id;
-  const shortLabel = (f) => f.via ? "Recirc (HERMS)" : f.from === f.to ? `${vn(f.from)} loop` : `→ ${vn(f.to)}`;
+  const shortLabel = (f) => f.via ? "Recirc" : f.from === f.to ? "Circulate" : `→ ${vn(f.to)}`;
 
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: 10, marginTop: 10 }}>
-      {pumps.map((pumpId) => {
-        const pflows = flows.filter((f) => f.pump === pumpId);
-        const routedId = state.routes?.[pumpId] ?? pflows[0]?.id;
-        const actor = config.actors.find((a) => a.id === pumpId);
-        const running = !!state.actorOn?.[pumpId] || state.manual?.[pumpId] === "on";
-        return (
-          <div key={pumpId} style={{ background: C.card, border: `1px solid ${running ? C.live + "66" : C.rule}`, borderRadius: 4, padding: "11px 13px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9, flexWrap: "wrap" }}>
-              <span style={{ width: 9, height: 9, borderRadius: "50%", flexShrink: 0, background: running ? C.live : C.dead, boxShadow: running ? `0 0 7px ${C.live}` : "none" }} />
-              <span style={{ ...legend, fontSize: 13, fontWeight: 700, flex: 1 }}>{actor?.name || pumpId}</span>
-              <Tap on={running} color={C.live} pad="10px 18px" size={13}
-                onClick={() => post(`/api/actors/${pumpId}`, { mode: running ? "off" : "on" })}>
-                {running ? "Running" : "Off"}
-              </Tap>
-            </div>
-            <div style={{ ...legend, fontSize: 10.5, color: C.faint, marginBottom: 6 }}>Line — where the flow goes</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {pflows.map((f) => {
-                const active = f.id === routedId;
-                const col = f.kind === "water" ? C.glycol : C.live;
-                return (
-                  <Tap key={f.id} on={active} color={col} pad="12px 16px" size={13}
-                    onClick={() => post("/api/flows/route", { pump: pumpId, flowId: f.id })}>
-                    {shortLabel(f)}
-                  </Tap>
-                );
-              })}
-            </div>
+  return pumps.map((pump) => {
+    const pflows = flows.filter((f) => f.pump === pump.id);
+    const routedId = state.routes?.[pump.id] ?? pflows[0]?.id;
+    const running = !!state.actorOn?.[pump.id] || state.manual?.[pump.id] === "on";
+    return (
+      <div key={pump.id} style={{ marginTop: 11, paddingTop: 10, borderTop: `1px solid ${C.ruleSoft}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: running ? C.live : C.dead, boxShadow: running ? `0 0 6px ${C.live}` : "none" }} />
+          <span style={{ ...legend, fontSize: 11, fontWeight: 600, color: running ? C.live : C.dim, flex: 1, whiteSpace: "nowrap" }}>{pump.name}</span>
+          <Tap on={running} color={C.live} pad="8px 14px" size={11}
+            onClick={() => post(`/api/actors/${pump.id}`, { mode: running ? "off" : "on" })}>
+            {running ? "On" : "Off"}
+          </Tap>
+        </div>
+        {pflows.length > 1 && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {pflows.map((f) => {
+              const active = f.id === routedId;
+              const col = f.kind === "water" ? C.glycol : C.live;
+              return (
+                <Tap key={f.id} on={active} color={col} pad="9px 12px" size={11}
+                  onClick={() => post("/api/flows/route", { pump: pump.id, flowId: f.id })}>
+                  {shortLabel(f)}
+                </Tap>
+              );
+            })}
           </div>
-        );
-      })}
-    </div>
-  );
+        )}
+      </div>
+    );
+  });
 }
 
 /* ── timers ───────────────────────────────────────────────── */

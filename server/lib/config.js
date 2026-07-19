@@ -42,9 +42,9 @@ export function defaultConfig() {
       /* Two physical pumps (like the rig): which PATH each one feeds is a
        * hose/port choice, modeled as flow routing below. */
       { id: "waterPump", name: "Water pump", control: "manual", gpio: null,
-        kind: "outlet", volts: 120, role: "pump" },
+        kind: "outlet", volts: 120, role: "pump", homeVessel: "hlt" },
       { id: "wortPump", name: "Wort pump", control: "manual", gpio: null,
-        kind: "outlet", volts: 120, role: "pump" },
+        kind: "outlet", volts: 120, role: "pump", homeVessel: "mash" },
     ],
 
     vessels: [
